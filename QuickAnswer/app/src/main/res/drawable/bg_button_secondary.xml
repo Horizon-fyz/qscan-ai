@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- button-secondary：透明底 + hairline-strong 1px 描边 + ink 文字，圆角 md(8dp)，按下态 surface -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface" />
+            <stroke android:width="1dp" android:color="@color/hairline_strong" />
+            <corners android:radius="@dimen/radius_md" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke android:width="1dp" android:color="@color/hairline_strong" />
+            <corners android:radius="@dimen/radius_md" />
+        </shape>
+    </item>
+</selector>

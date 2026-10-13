@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 间距与圆角刻度来自 notion DESIGN.md（spacing / rounded） -->
+<resources>
+    <!-- spacing（xxs4 / xs8 / sm12 / md16 / lg20 / xl24 / xxl32 / xxxl40） -->
+    <dimen name="space_xxs">4dp</dimen>
+    <dimen name="space_xs">8dp</dimen>
+    <dimen name="space_sm">12dp</dimen>
+    <dimen name="space_md">16dp</dimen>
+    <dimen name="space_lg">20dp</dimen>
+    <dimen name="space_xl">24dp</dimen>
+    <dimen name="space_xxl">32dp</dimen>
+    <dimen name="space_xxxl">40dp</dimen>
+
+    <!-- rounded（xs4 / sm6 / md8 / lg12 / xl16 / xxl20 / xxxl24 / full） -->
+    <dimen name="radius_xs">4dp</dimen>
+    <dimen name="radius_sm">6dp</dimen>
+    <dimen name="radius_md">8dp</dimen>
+    <dimen name="radius_lg">12dp</dimen>
+    <dimen name="radius_xl">16dp</dimen>
+    <dimen name="radius_xxl">20dp</dimen>
+    <dimen name="radius_xxxl">24dp</dimen>
+    <dimen name="radius_full">999dp</dimen>
+
+    <!-- 控件与触控目标（Notion：按钮/输入 40–44px，表单 44px） -->
+    <dimen name="control_height">44dp</dimen>
+    <dimen name="touch_target">48dp</dimen>
+
+    <!-- 结果面板固定高度（上下两区需在有界父容器内按 weight 等分） -->
+    <dimen name="panel_height">560dp</dimen>
+    <dimen name="grabber_width">36dp</dimen>
+    <dimen name="grabber_height">4dp</dimen>
+</resources>

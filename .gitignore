@@ -1,0 +1,50 @@
+# ==========================================================
+# 版本库忽略规则（QuickAnswer / Android · Kotlin · Gradle）
+# ==========================================================
+
+# ---- 设计参考库：仅本地参考，不纳入版本库 ----
+/awesome-design-md/
+
+# ---- Gradle ----
+.gradle/
+build/
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ---- Android 构建产物 ----
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.hprof
+*.keystore
+*.jks
+release/
+output-metadata.json
+
+# ---- 本机与敏感配置（勿提交）----
+local.properties
+*.env
+.env.*
+
+# ---- IDE / 编辑器 ----
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.cursor/
+
+# ---- 日志与临时文件 ----
+*.log
+*.tmp
+*.bak
+*~
+
+# ---- 操作系统 ----
+.DS_Store
+Thumbs.db
+desktop.ini

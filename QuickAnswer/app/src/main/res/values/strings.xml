@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">答题助手</string>
+    <string name="eyebrow">AI 答题助手</string>
+    <string name="subtitle">截屏识别题目 · DeepSeek 智能解答</string>
+    <string name="footer">截屏内容仅在本机识别，仅将识别文本发送至 DeepSeek。</string>
+
+    <string name="usage_title">使用说明</string>
+    <string name="usage_body">1. 填写 DeepSeek API Key 并选择模型。\n2. 依次授予悬浮窗、通知权限。\n3. 点击「启动悬浮窗」，在系统弹窗中允许「屏幕录制/投屏」。\n4. 回到任意页面，点击屏幕上的悬浮球「答」，即可自动截屏识别题目并由 DeepSeek 解答。\n\n提示：截屏瞬间悬浮球会自动隐藏，避免遮挡题目。</string>
+
+    <string name="config_title">DeepSeek 配置</string>
+    <string name="api_key_title">API Key</string>
+    <string name="api_key_hint">sk-xxxxxxxx</string>
+    <string name="api_key_note">在 platform.deepseek.com 申请，仅保存在本机。</string>
+    <string name="model_title">模型</string>
+    <string name="model_chat">deepseek-chat</string>
+    <string name="model_reasoner">deepseek-reasoner</string>
+
+    <string name="step_overlay">1. 授予悬浮窗权限</string>
+    <string name="step_notify">2. 授予通知权限</string>
+    <string name="step_start">3. 启动悬浮窗</string>
+    <string name="stop_service">停止悬浮窗</string>
+
+    <string name="status_idle">填写信息后即可启动。</string>
+    <string name="status_need_key">请先填写 DeepSeek API Key。</string>
+    <string name="status_need_overlay">请先授予悬浮窗权限。</string>
+    <string name="status_started">悬浮窗已启动，回到任意页面点击悬浮球即可。</string>
+    <string name="status_stopped">悬浮窗已停止。</string>
+
+    <string name="notif_channel">答题助手</string>
+    <string name="notif_title">答题助手运行中</string>
+    <string name="notif_text">点击悬浮球即可截屏识别题目</string>
+
+    <string name="ball_text">答</string>
+
+    <string name="panel_title">解答</string>
+    <string name="panel_status_idle">点击悬浮球开始</string>
+    <string name="panel_question_label">题目识别</string>
+    <string name="panel_answer_label">答案输出</string>
+    <string name="panel_question_empty">—</string>
+    <string name="panel_answer_empty">等待解答…</string>
+    <string name="btn_copy">复制</string>
+    <string name="btn_reread">重识别</string>
+
+    <string name="panel_status_capturing">正在截屏识别…</string>
+    <string name="panel_status_asking">DeepSeek 正在解答…</string>
+    <string name="panel_status_no_text">未识别到文字，请调整后重试。</string>
+    <string name="panel_status_capture_fail">截屏失败，请重新启动悬浮窗。</string>
+    <string name="panel_status_error">请求失败：</string>
+    <string name="panel_status_copied">已复制到剪贴板</string>
+</resources>

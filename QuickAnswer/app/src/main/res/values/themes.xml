@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 主题与文字层级：基准 notion/DESIGN.md。
+     字体以 Notion Sans 的等价通用方案替代：系统 sans-serif（正文）/ sans-serif-medium（500–600 字重）。 -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.QuickAnswer" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/brand_navy</item>
+        <item name="colorAccent">@color/primary</item>
+        <item name="android:windowBackground">@color/canvas</item>
+        <!-- 顶部为深蓝 hero band，状态栏同色 + 白色图标，形成 Notion 式深色头图 -->
+        <item name="android:statusBarColor">@color/brand_navy</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="android:navigationBarColor">@color/canvas</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+    </style>
+
+    <!-- ===== 文字层级（对应 DESIGN.md typography） ===== -->
+
+    <!-- micro-uppercase：深蓝 hero 上的浅紫眉标 -->
+    <style name="Tv.HeroEyebrow" parent="">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/brand_purple_300</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <!-- heading-4：hero 主标题 -->
+    <style name="Tv.HeroTitle" parent="">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">@color/on_dark</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <!-- body-sm：hero 副标题（深色底次级文字） -->
+    <style name="Tv.HeroSubtitle" parent="">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/on_dark_muted</item>
+        <item name="android:lineSpacingMultiplier">1.5</item>
+    </style>
+
+    <!-- heading-5：卡片标题（暖炭色） -->
+    <style name="Tv.SectionTitle" parent="">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/charcoal</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <!-- body-md：主正文 -->
+    <style name="Tv.Body" parent="">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:lineSpacingMultiplier">1.55</item>
+    </style>
+
+    <!-- body-sm：次级正文 -->
+    <style name="Tv.BodySm" parent="">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/slate</item>
+        <item name="android:lineSpacingMultiplier">1.5</item>
+    </style>
+
+    <!-- caption：说明/状态 -->
+    <style name="Tv.Caption" parent="">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/steel</item>
+    </style>
+
+    <!-- micro-uppercase：表单字段标签 -->
+    <style name="Tv.Label" parent="">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/steel</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <!-- caption-bold：区域标签 chip 文字 -->
+    <style name="Tv.Tag" parent="">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/charcoal</item>
+    </style>
+
+    <!-- ===== 按钮（对应 DESIGN.md button-primary / button-secondary / button-ghost） ===== -->
+
+    <style name="Btn.Primary" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/bg_button_primary</item>
+        <item name="android:textColor">@color/on_primary</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">@dimen/control_height</item>
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+    </style>
+
+    <style name="Btn.Secondary" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/bg_button_secondary</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">@dimen/control_height</item>
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+    </style>
+
+    <style name="Btn.Ghost" parent="Widget.AppCompat.Button.Borderless">
+        <item name="android:background">@drawable/bg_button_tertiary</item>
+        <item name="android:textColor">@color/slate</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">@dimen/control_height</item>
+    </style>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 应用图标前景：白色对话气泡 + 三个圆点（答题助手） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,34 h44 a8,8 0 0 1 8,8 v22 a8,8 0 0 1 -8,8 h-20 l-12,11 v-11 h-12 a8,8 0 0 1 -8,-8 v-22 a8,8 0 0 1 8,-8 z" />
+    <path
+        android:fillColor="#FF5600"
+        android:pathData="M42,50 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path
+        android:fillColor="#FF5600"
+        android:pathData="M54,50 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path
+        android:fillColor="#FF5600"
+        android:pathData="M66,50 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+</vector>

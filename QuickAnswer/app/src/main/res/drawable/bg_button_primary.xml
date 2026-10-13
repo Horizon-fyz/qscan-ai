@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- button-primary：签名紫 #5645D4 底 + 白字，圆角 md(8dp)，按下态 primary-pressed -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/primary_pressed" />
+            <corners android:radius="@dimen/radius_md" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/primary" />
+            <corners android:radius="@dimen/radius_md" />
+        </shape>
+    </item>
+</selector>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 设计令牌来自 awesome-design-md/design-md/notion/DESIGN.md（含 colors 全量令牌，便于追溯） -->
+<resources>
+    <!-- Brand & Primary -->
+    <color name="primary">#5645D4</color>            <!-- 签名紫：唯一主导 CTA 色，仅用于主按钮 -->
+    <color name="primary_pressed">#4534B3</color>    <!-- 主按钮按下态 -->
+    <color name="primary_deep">#3A2A99</color>
+    <color name="on_primary">#FFFFFF</color>         <!-- 紫底上的文字 -->
+    <color name="brand_navy">#0A1530</color>         <!-- Hero band 深蓝 -->
+    <color name="brand_navy_deep">#070F24</color>
+    <color name="brand_navy_mid">#1A2A52</color>
+    <color name="link_blue">#0075DE</color>          <!-- 行内链接蓝（与主紫分工不同） -->
+    <color name="brand_orange">#DD5B00</color>
+    <color name="brand_orange_deep">#793400</color>
+    <color name="brand_purple_300">#D6B6F6</color>   <!-- 深蓝底上的浅紫强调 -->
+    <color name="brand_purple_800">#391C57</color>
+    <color name="brand_green">#1AAE39</color>
+
+    <!-- Card Tints（柔彩卡片底色，呼应产品内彩色属性） -->
+    <color name="tint_peach">#FFE8D4</color>
+    <color name="tint_rose">#FDE0EC</color>
+    <color name="tint_mint">#D9F3E1</color>
+    <color name="tint_lavender">#E6E0F5</color>
+    <color name="tint_sky">#DCECFA</color>
+    <color name="tint_yellow">#FEF7D6</color>
+    <color name="tint_yellow_bold">#F9E79F</color>
+    <color name="tint_cream">#F8F5E8</color>
+    <color name="tint_gray">#F0EEEC</color>
+
+    <!-- Surface -->
+    <color name="canvas">#FFFFFF</color>             <!-- 页面/卡片底 -->
+    <color name="surface">#F6F5F4</color>            <!-- 次级区块底 / 面板题目区 -->
+    <color name="surface_soft">#FAFAF9</color>
+    <color name="hairline">#E5E3DF</color>           <!-- 1px 描边/分隔 -->
+    <color name="hairline_soft">#EDE9E4</color>
+    <color name="hairline_strong">#C8C4BE</color>    <!-- 输入框/次级按钮描边 -->
+
+    <!-- Text -->
+    <color name="ink_deep">#000000</color>           <!-- 纯黑强调（Pill 选中底） -->
+    <color name="ink">#1A1A1A</color>                <!-- 主文字 -->
+    <color name="charcoal">#37352F</color>           <!-- Notion 招牌暖炭色（卡片标题） -->
+    <color name="slate">#5D5B54</color>              <!-- 次级文字 -->
+    <color name="steel">#787671</color>              <!-- 三级文字/标签 -->
+    <color name="stone">#A4A097</color>
+    <color name="muted">#BBB8B1</color>              <!-- 占位/禁用 -->
+    <color name="on_dark">#FFFFFF</color>            <!-- 深色底文字 -->
+    <color name="on_dark_muted">#A4A097</color>      <!-- 深色底次级文字 -->
+
+    <!-- Semantic -->
+    <color name="semantic_success">#1AAE39</color>
+    <color name="semantic_warning">#DD5B00</color>
+    <color name="semantic_error">#E03131</color>
+</resources>
