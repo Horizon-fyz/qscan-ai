@@ -10,8 +10,8 @@
         <!-- 顶部为深蓝 hero band，状态栏同色 + 白色图标，形成 Notion 式深色头图 -->
         <item name="android:statusBarColor">@color/brand_navy</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
-        <item name="android:navigationBarColor">@color/canvas</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+        <item name="android:navigationBarColor">@color/brand_navy</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
     </style>
 
     <!-- ===== 文字层级（对应 DESIGN.md typography） ===== -->
