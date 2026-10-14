@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- pill-tab-active：ink-deep 实底 + on-dark 文字，圆角 full -->
+<!-- pill-tab-active：primary 实底 + on-primary 文字，圆角 full。
+     primary 与 on_primary 在日/夜两种模式下均成立，故日夜通用无冲突。 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="@color/ink_deep" />
-    <stroke android:width="1dp" android:color="@color/ink_deep" />
+    <solid android:color="@color/primary" />
+    <stroke android:width="1dp" android:color="@color/primary" />
     <corners android:radius="@dimen/radius_full" />
 </shape>

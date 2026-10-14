@@ -148,7 +148,7 @@
                         android:gravity="center"
                         android:maxLines="1"
                         android:text="@string/model_chat"
-                        android:textColor="@color/on_dark"
+                        android:textColor="@color/on_primary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -199,7 +199,7 @@
                         android:gravity="center"
                         android:maxLines="1"
                         android:text="@string/mode_solve"
-                        android:textColor="@color/on_dark"
+                        android:textColor="@color/on_primary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -252,6 +252,90 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_md"
                     android:text="@string/settings_autosave" />
+            </LinearLayout>
+
+            <!-- 外观：日/夜模式（跟随系统 / 浅色 / 深色） -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="@dimen/space_xl">
+
+                <TextView
+                    style="@style/Tv.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/appearance_title" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/segThemeSystem"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/control_height"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeMinTextSize="10sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:autoSizeTextType="uniform"
+                        android:background="@drawable/bg_segment_selected"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/theme_system"
+                        android:textColor="@color/on_primary"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/segThemeLight"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/control_height"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeMinTextSize="10sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:autoSizeTextType="uniform"
+                        android:background="@drawable/bg_segment_default"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/theme_light"
+                        android:textColor="@color/steel"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/segThemeDark"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/control_height"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeMinTextSize="10sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:autoSizeTextType="uniform"
+                        android:background="@drawable/bg_segment_default"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/theme_dark"
+                        android:textColor="@color/steel"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/Tv.Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="@string/appearance_note" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

@@ -1,22 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 设计令牌来自 awesome-design-md/design-md/notion/DESIGN.md（含 colors 全量令牌，便于追溯） -->
+<!-- 设计令牌：MT 管理器式中性工具型视觉（日间值）。
+     参考基准：awesome-design-md/design-md/raycast + linear.app（暗色工具型）。
+     要点：中性灰底（非暖色/非深蓝）、单一蓝色强调色、紧凑高密度、1px hairline 描边无阴影。
+     日夜模式：本文件为日间值，values-night/colors.xml 为同名夜间覆盖，全 App 自动切换。 -->
 <resources>
-    <!-- Brand & Primary -->
-    <color name="primary">#5645D4</color>            <!-- 签名紫：唯一主导 CTA 色，仅用于主按钮 -->
-    <color name="primary_pressed">#4534B3</color>    <!-- 主按钮按下态 -->
-    <color name="primary_deep">#3A2A99</color>
-    <color name="on_primary">#FFFFFF</color>         <!-- 紫底上的文字 -->
-    <color name="brand_navy">#0A1530</color>         <!-- Hero band 深蓝 -->
-    <color name="brand_navy_deep">#070F24</color>
-    <color name="brand_navy_mid">#1A2A52</color>
-    <color name="link_blue">#0075DE</color>          <!-- 行内链接蓝（与主紫分工不同） -->
-    <color name="brand_orange">#DD5B00</color>
+    <!-- Accent & Primary -->
+    <color name="primary">#1976D2</color>            <!-- 签名蓝：唯一主导强调色 -->
+    <color name="primary_pressed">#1565C0</color>    <!-- 主按钮按下态 -->
+    <color name="primary_deep">#0D47A1</color>
+    <color name="on_primary">#FFFFFF</color>         <!-- 蓝底上的文字 -->
+    <color name="brand_navy">#F2F2F2</color>         <!-- app bar / 条状背景（中性灰） -->
+    <color name="brand_navy_deep">#E9E9E9</color>    <!-- 底栏 / 侧拉栏 -->
+    <color name="brand_navy_mid">#DADADA</color>     <!-- chrome 分隔线 -->
+    <color name="link_blue">#1976D2</color>          <!-- 行内链接蓝 -->
+    <color name="brand_orange">#FB8C00</color>
     <color name="brand_orange_deep">#793400</color>
-    <color name="brand_purple_300">#D6B6F6</color>   <!-- 深蓝底上的浅紫强调 -->
+    <color name="brand_purple_300">#1976D2</color>   <!-- 条状背景上的强调（蓝） -->
     <color name="brand_purple_800">#391C57</color>
     <color name="brand_green">#1AAE39</color>
 
-    <!-- Card Tints（柔彩卡片底色，呼应产品内彩色属性） -->
+    <!-- Card Tints（分类标签底色，仅用于标签/局部着色） -->
     <color name="tint_peach">#FFE8D4</color>
     <color name="tint_rose">#FDE0EC</color>
     <color name="tint_mint">#D9F3E1</color>
@@ -27,24 +30,27 @@
     <color name="tint_cream">#F8F5E8</color>
     <color name="tint_gray">#F0EEEC</color>
 
-    <!-- Surface -->
+    <!-- 列表选中行底色（MT 式淡蓝高亮） -->
+    <color name="row_selected">#DCEBFC</color>
+
+    <!-- Surface ladder -->
     <color name="canvas">#FFFFFF</color>             <!-- 页面/卡片底 -->
-    <color name="surface">#F6F5F4</color>            <!-- 次级区块底 / 面板题目区 -->
-    <color name="surface_soft">#FAFAF9</color>
-    <color name="hairline">#E5E3DF</color>           <!-- 1px 描边/分隔 -->
-    <color name="hairline_soft">#EDE9E4</color>
-    <color name="hairline_strong">#C8C4BE</color>    <!-- 输入框/次级按钮描边 -->
+    <color name="surface">#F2F2F2</color>            <!-- 次级区块底 -->
+    <color name="surface_soft">#F7F7F7</color>
+    <color name="hairline">#E0E0E0</color>           <!-- 1px 描边/分隔 -->
+    <color name="hairline_soft">#EAEAEA</color>
+    <color name="hairline_strong">#C8C8C8</color>    <!-- 输入框/次级按钮描边 -->
 
     <!-- Text -->
-    <color name="ink_deep">#000000</color>           <!-- 纯黑强调（Pill 选中底） -->
-    <color name="ink">#1A1A1A</color>                <!-- 主文字 -->
-    <color name="charcoal">#37352F</color>           <!-- Notion 招牌暖炭色（卡片标题） -->
-    <color name="slate">#5D5B54</color>              <!-- 次级文字 -->
-    <color name="steel">#787671</color>              <!-- 三级文字/标签 -->
-    <color name="stone">#A4A097</color>
-    <color name="muted">#BBB8B1</color>              <!-- 占位/禁用 -->
-    <color name="on_dark">#FFFFFF</color>            <!-- 深色底文字 -->
-    <color name="on_dark_muted">#A4A097</color>      <!-- 深色底次级文字 -->
+    <color name="ink_deep">#000000</color>           <!-- 纯黑强调 -->
+    <color name="ink">#1F1F1F</color>                <!-- 主文字 -->
+    <color name="charcoal">#212121</color>           <!-- 标题 -->
+    <color name="slate">#5F5F5F</color>              <!-- 次级文字 -->
+    <color name="steel">#757575</color>              <!-- 三级文字/标签 -->
+    <color name="stone">#9E9E9E</color>
+    <color name="muted">#BDBDBD</color>              <!-- 占位/禁用 -->
+    <color name="on_dark">#212121</color>            <!-- 条状背景上的文字（日间为深色） -->
+    <color name="on_dark_muted">#6B6B6B</color>      <!-- 条状背景上的次级文字 -->
 
     <!-- Semantic -->
     <color name="semantic_success">#1AAE39</color>

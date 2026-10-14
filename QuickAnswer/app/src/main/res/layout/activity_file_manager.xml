@@ -86,77 +86,107 @@
             android:layout_height="wrap_content"
             android:background="@color/brand_navy_deep">
 
-            <HorizontalScrollView
+            <LinearLayout
                 android:id="@+id/fileBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:paddingStart="@dimen/space_xs"
-                android:paddingTop="@dimen/space_xs"
+                android:paddingTop="@dimen/space_xxs"
                 android:paddingEnd="@dimen/space_xs"
-                android:paddingBottom="@dimen/space_xs"
-                android:scrollbars="none">
+                android:paddingBottom="@dimen/space_xxs">
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                <ImageView
+                    android:id="@+id/btnBack"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="@string/fm_back"
+                    android:focusable="true"
+                    android:padding="@dimen/space_sm"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_fm_back" />
 
-                    <TextView
-                        android:id="@+id/btnBack"
-                        style="@style/Chip.Dark"
-                        android:paddingStart="@dimen/space_sm"
-                        android:paddingEnd="@dimen/space_sm"
-                        android:text="@string/fm_back" />
+                <ImageView
+                    android:id="@+id/btnForward"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="@string/fm_forward"
+                    android:focusable="true"
+                    android:padding="@dimen/space_sm"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_fm_forward" />
 
-                    <TextView
-                        android:id="@+id/btnForward"
-                        style="@style/Chip.Dark"
-                        android:layout_marginStart="@dimen/space_xs"
-                        android:paddingStart="@dimen/space_sm"
-                        android:paddingEnd="@dimen/space_sm"
-                        android:text="@string/fm_forward" />
+                <ImageView
+                    android:id="@+id/btnUp"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="@string/fm_up"
+                    android:focusable="true"
+                    android:padding="@dimen/space_sm"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_fm_up" />
 
-                    <TextView
-                        android:id="@+id/btnUp"
-                        style="@style/Chip.Dark"
-                        android:layout_marginStart="@dimen/space_xs"
-                        android:paddingStart="@dimen/space_sm"
-                        android:paddingEnd="@dimen/space_sm"
-                        android:text="@string/fm_up" />
+                <ImageView
+                    android:id="@+id/btnSync"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="@string/fm_sync"
+                    android:focusable="true"
+                    android:padding="@dimen/space_sm"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_fm_sync" />
 
-                    <TextView
-                        android:id="@+id/btnSync"
-                        style="@style/Chip.Dark"
-                        android:layout_marginStart="@dimen/space_xs"
-                        android:paddingStart="@dimen/space_sm"
-                        android:paddingEnd="@dimen/space_sm"
-                        android:text="@string/fm_sync" />
+                <ImageView
+                    android:id="@+id/btnNewFolder"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="@string/fm_new_folder"
+                    android:focusable="true"
+                    android:padding="@dimen/space_sm"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_fm_new" />
 
-                    <TextView
-                        android:id="@+id/btnNewFolder"
-                        style="@style/Chip.Dark"
-                        android:layout_marginStart="@dimen/space_xs"
-                        android:paddingStart="@dimen/space_sm"
-                        android:paddingEnd="@dimen/space_sm"
-                        android:text="@string/fm_new_folder" />
+                <ImageView
+                    android:id="@+id/btnSort"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="@string/fm_sort"
+                    android:focusable="true"
+                    android:padding="@dimen/space_sm"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_fm_sort" />
 
-                    <TextView
-                        android:id="@+id/btnSort"
-                        style="@style/Chip.Dark"
-                        android:layout_marginStart="@dimen/space_xs"
-                        android:paddingStart="@dimen/space_sm"
-                        android:paddingEnd="@dimen/space_sm"
-                        android:text="@string/fm_sort" />
-
-                    <TextView
-                        android:id="@+id/btnFilter"
-                        style="@style/Chip.Dark"
-                        android:layout_marginStart="@dimen/space_xs"
-                        android:paddingStart="@dimen/space_sm"
-                        android:paddingEnd="@dimen/space_sm"
-                        android:text="@string/fm_filter" />
-                </LinearLayout>
-            </HorizontalScrollView>
+                <ImageView
+                    android:id="@+id/btnFilter"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="@string/fm_filter"
+                    android:focusable="true"
+                    android:padding="@dimen/space_sm"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_fm_filter" />
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/selectBar"

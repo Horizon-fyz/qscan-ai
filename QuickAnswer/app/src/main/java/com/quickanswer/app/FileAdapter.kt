@@ -49,13 +49,30 @@ class FileAdapter(private val context: Context) : BaseAdapter() {
 
         name.text = file.name
         if (file.isDirectory) {
-            icon.setImageResource(R.drawable.ic_folder)
+            icon.setImageResource(iconFor(file))
             val count = file.listFiles()?.size ?: 0
             meta.text = context.getString(R.string.fm_n_items, count)
         } else {
-            icon.setImageResource(R.drawable.ic_file)
+            icon.setImageResource(iconFor(file))
             meta.text = "${FileUtils.formatSize(file.length())} · ${FileUtils.formatDate(file.lastModified())}"
         }
         return view
+    }
+
+    /** 按文件类型返回彩色图标（MT 式分类着色）。 */
+    private fun iconFor(file: File): Int {
+        if (file.isDirectory) return R.drawable.ic_fm_folder
+        return when (file.extension.lowercase()) {
+            "apk", "apks", "xapk" -> R.drawable.ic_fm_apk
+            "jpg", "jpeg", "png", "gif", "webp", "bmp", "heic", "heif", "svg" -> R.drawable.ic_fm_image
+            "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "3gp", "m4v", "ts" -> R.drawable.ic_fm_video
+            "mp3", "wav", "flac", "aac", "ogg", "m4a", "wma", "ape" -> R.drawable.ic_fm_audio
+            "zip", "rar", "7z", "tar", "gz", "bz2", "xz", "iso" -> R.drawable.ic_fm_archive
+            "txt", "md", "log", "json", "xml", "html", "htm", "css", "js", "kt", "java",
+            "py", "c", "cpp", "h", "ini", "conf", "yml", "yaml", "csv", "sh" -> R.drawable.ic_fm_text
+            "pdf" -> R.drawable.ic_fm_pdf
+            "doc", "docx", "xls", "xlsx", "ppt", "pptx", "wps", "et", "dps" -> R.drawable.ic_fm_doc
+            else -> R.drawable.ic_fm_file
+        }
     }
 }

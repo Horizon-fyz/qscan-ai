@@ -31,6 +31,12 @@
     <string name="mode_realtime">实时模式</string>
     <string name="mode_note">解题模式：重点解题；日常模式：重点指引操作或读取事实；实时模式：持续观察屏幕变化并即时回答。后两者均支持语音/文字需求。</string>
 
+    <string name="appearance_title">外观</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="appearance_note">默认跟随系统深浅色，可在此手动固定。</string>
+
     <string name="launch_title">启动悬浮窗</string>
     <string name="step_overlay">1. 授予悬浮窗权限</string>
     <string name="step_notify">2. 授予通知权限</string>

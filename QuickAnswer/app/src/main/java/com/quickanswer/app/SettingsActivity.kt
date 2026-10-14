@@ -3,6 +3,7 @@ package com.quickanswer.app
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import com.quickanswer.app.databinding.ActivitySettingsBinding
@@ -40,6 +41,11 @@ class SettingsActivity : AppCompatActivity() {
         binding.segModeSolve.setOnClickListener { selectMode(Prefs.MODE_SOLVE) }
         binding.segModeDaily.setOnClickListener { selectMode(Prefs.MODE_DAILY) }
         binding.segModeRealtime.setOnClickListener { selectMode(Prefs.MODE_REALTIME) }
+
+        selectTheme(Prefs.theme(this))
+        binding.segThemeSystem.setOnClickListener { selectTheme(Prefs.THEME_SYSTEM) }
+        binding.segThemeLight.setOnClickListener { selectTheme(Prefs.THEME_LIGHT) }
+        binding.segThemeDark.setOnClickListener { selectTheme(Prefs.THEME_DARK) }
     }
 
     private fun selectModel(model: String) {
@@ -55,10 +61,18 @@ class SettingsActivity : AppCompatActivity() {
         styleSeg(binding.segModeRealtime, mode == Prefs.MODE_REALTIME)
     }
 
+    private fun selectTheme(theme: String) {
+        Prefs.setTheme(this, theme)
+        AppCompatDelegate.setDefaultNightMode(App.modeOf(theme))
+        styleSeg(binding.segThemeSystem, theme == Prefs.THEME_SYSTEM)
+        styleSeg(binding.segThemeLight, theme == Prefs.THEME_LIGHT)
+        styleSeg(binding.segThemeDark, theme == Prefs.THEME_DARK)
+    }
+
     private fun styleSeg(view: TextView, selected: Boolean) {
         view.setBackgroundResource(
             if (selected) R.drawable.bg_segment_selected else R.drawable.bg_segment_default
         )
-        view.setTextColor(ContextCompat.getColor(this, if (selected) R.color.on_dark else R.color.steel))
+        view.setTextColor(ContextCompat.getColor(this, if (selected) R.color.on_primary else R.color.steel))
     }
 }

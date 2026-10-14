@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 夜间主题覆盖：仅覆盖状态栏/导航栏的明暗标志，其余继承 values/themes.xml。 -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.QuickAnswer" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/brand_navy</item>
+        <item name="colorAccent">@color/primary</item>
+        <item name="android:windowBackground">@color/canvas</item>
+        <item name="android:statusBarColor">@color/brand_navy</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="android:navigationBarColor">@color/brand_navy</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+    </style>
+</resources>

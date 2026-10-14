@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 文件行背景：多选高亮（activated）用淡紫，其余为 canvas 白 + hairline 分隔由 ListView 负责 -->
+<!-- 文件行背景：多选高亮（activated）用 MT 式淡蓝，其余为 canvas 底 + 1dp hairline 分隔由 ListView 负责 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_activated="true" android:drawable="@color/tint_lavender" />
+    <item android:state_activated="true" android:drawable="@color/row_selected" />
     <item android:drawable="@color/canvas" />
 </selector>

@@ -49,6 +49,7 @@ keystore/
 *.tmp
 *.bak
 *~
+/_shots/
 
 # ---- 操作系统 ----
 .DS_Store

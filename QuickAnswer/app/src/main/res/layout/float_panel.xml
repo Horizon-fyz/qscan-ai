@@ -84,7 +84,7 @@
                 android:gravity="center"
                 android:maxLines="1"
                 android:text="@string/mode_solve"
-                android:textColor="@color/on_dark"
+                android:textColor="@color/on_primary"
                 android:textSize="12sp" />
 
             <TextView

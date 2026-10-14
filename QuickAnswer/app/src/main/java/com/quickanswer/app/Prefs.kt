@@ -77,6 +77,23 @@ object Prefs {
             .edit().putString(KEY_MODE, value).apply()
     }
 
+    // ---------------------------------------------------------------- 外观（日/夜）
+
+    const val KEY_THEME = "theme"
+    const val THEME_SYSTEM = "system"
+    const val THEME_LIGHT = "light"
+    const val THEME_DARK = "dark"
+
+    /** 外观偏好：默认跟随系统深浅色。 */
+    fun theme(context: Context): String =
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .getString(KEY_THEME, THEME_SYSTEM).orEmpty()
+
+    fun setTheme(context: Context, value: String) {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .edit().putString(KEY_THEME, value).apply()
+    }
+
     /**
      * 注册/注销模式变化监听：悬浮窗服务与主界面同进程，
      * 主界面切换模式后，服务据此实时刷新悬浮球文案与面板形态。

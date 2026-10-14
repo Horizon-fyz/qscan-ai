@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 主题与文字层级：基准 notion/DESIGN.md。
-     字体以 Notion Sans 的等价通用方案替代：系统 sans-serif（正文）/ sans-serif-medium（500–600 字重）。 -->
+<!-- 主题与文字层级：MT 管理器式中性工具型视觉（日间基准）。
+     字体：系统 sans-serif（正文）/ sans-serif-medium（500–600 字重）。
+     日夜模式：父类 DayNight，夜间差异见 values-night/themes.xml。 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.QuickAnswer" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="Theme.QuickAnswer" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/brand_navy</item>
         <item name="colorAccent">@color/primary</item>
         <item name="android:windowBackground">@color/canvas</item>
-        <!-- 顶部为深蓝 hero band，状态栏同色 + 白色图标，形成 Notion 式深色头图 -->
+        <!-- 顶部为中性灰 app bar，状态栏同色 + 深色图标 -->
         <item name="android:statusBarColor">@color/brand_navy</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
         <item name="android:navigationBarColor">@color/brand_navy</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
     </style>
 
     <!-- 导出选择器：完全透明的浮层宿主，仅承载对话框与后台 WebView 渲染 -->
@@ -24,9 +25,9 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
-    <!-- ===== 文字层级（对应 DESIGN.md typography） ===== -->
+    <!-- ===== 文字层级 ===== -->
 
-    <!-- micro-uppercase：深蓝 hero 上的浅紫眉标 -->
+    <!-- micro-uppercase：app bar 上的眉标 -->
     <style name="Tv.HeroEyebrow" parent="">
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textSize">11sp</item>
@@ -35,7 +36,7 @@
         <item name="android:textAllCaps">true</item>
     </style>
 
-    <!-- heading-4：hero 主标题 -->
+    <!-- heading-4：app bar 主标题 -->
     <style name="Tv.HeroTitle" parent="">
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textSize">22sp</item>
@@ -43,7 +44,7 @@
         <item name="android:letterSpacing">-0.02</item>
     </style>
 
-    <!-- body-sm：hero 副标题（深色底次级文字） -->
+    <!-- body-sm：app bar 副标题 -->
     <style name="Tv.HeroSubtitle" parent="">
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:textSize">14sp</item>
@@ -51,7 +52,7 @@
         <item name="android:lineSpacingMultiplier">1.5</item>
     </style>
 
-    <!-- heading-5：卡片标题（暖炭色） -->
+    <!-- heading-5：卡片标题 -->
     <style name="Tv.SectionTitle" parent="">
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textSize">18sp</item>
@@ -98,7 +99,7 @@
         <item name="android:textColor">@color/charcoal</item>
     </style>
 
-    <!-- ===== 按钮（对应 DESIGN.md button-primary / button-secondary / button-ghost） ===== -->
+    <!-- ===== 按钮 ===== -->
 
     <style name="Btn.Primary" parent="Widget.AppCompat.Button">
         <item name="android:background">@drawable/bg_button_primary</item>
@@ -147,7 +148,7 @@
         <item name="android:focusable">true</item>
     </style>
 
-    <!-- 深色底栏上的 chip：白字，底仍用 ghost 透明 + surface 按下态 -->
+    <!-- 底栏上的 chip：条状背景文字色，底仍用 ghost 透明 -->
     <style name="Chip.Dark" parent="Chip.Action">
         <item name="android:textColor">@color/on_dark</item>
     </style>

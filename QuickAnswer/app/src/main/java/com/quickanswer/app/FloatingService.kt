@@ -746,7 +746,7 @@ class FloatingService : Service() {
         view.setBackgroundResource(
             if (selected) R.drawable.bg_segment_selected else R.drawable.bg_segment_default
         )
-        view.setTextColor(ContextCompat.getColor(this, if (selected) R.color.on_dark else R.color.steel))
+        view.setTextColor(ContextCompat.getColor(this, if (selected) R.color.on_primary else R.color.steel))
     }
 
     /** 面板是否可获焦：日常模式需要（让输入框能弹软键盘），解题模式保持不抢焦点。 */
