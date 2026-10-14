@@ -159,12 +159,19 @@ object Vendors {
         return hits.singleOrNull()
     }
 
-    /** 文本是否像一把 API Key：单行、长度 ≥16、仅含字母数字与 -_. 、且不是 URL / 邮箱。 */
+    /**
+     * 文本是否像一把 API Key：单行、长度 ≥16、仅含 ASCII 字母数字与 -_. 、且不是 URL / 邮箱。
+     *
+     * 限定 ASCII 是为了持续监听时避免误判——中文等非 ASCII 文字会被 [Char.isLetterOrDigit]
+     * 判为字母，导致普通句子被当成 Key。
+     */
     fun looksLikeKey(text: String): Boolean {
         val t = text.trim()
         if (t.length < 16 || t.length > 256) return false
         if (t.any { it.isWhitespace() }) return false
         if (t.contains("://") || t.contains("@")) return false
-        return t.all { it.isLetterOrDigit() || it == '-' || it == '_' || it == '.' }
+        return t.all {
+            it in 'a'..'z' || it in 'A'..'Z' || it in '0'..'9' || it == '-' || it == '_' || it == '.'
+        }
     }
 }

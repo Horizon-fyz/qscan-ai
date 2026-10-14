@@ -226,11 +226,13 @@
     <string name="browser_load_failed">页面加载失败，请检查网络</string>
     <string name="browser_scan">识别剪贴板中的 API Key</string>
     <string name="browser_saved_title">已保存的密钥</string>
-    <string name="browser_saved_empty">还没有保存任何密钥。复制厂商的 API Key 后点上方按钮即可识别并保存。</string>
+    <string name="browser_saved_empty">还没有保存任何密钥。复制厂商的 API Key 后会自动识别并弹出保存框。</string>
     <string name="browser_clip_empty">剪贴板为空，请先复制 API Key</string>
     <string name="browser_clip_url">识别到厂商链接：%1$s，正在打开…</string>
     <string name="browser_clip_recognized">识别到 %1$s</string>
     <string name="browser_clip_none">未能识别剪贴板内容，请复制完整的 API Key</string>
+    <string name="browser_clip_detected">识别到 API Key，可在「开放平台」中保存</string>
+    <string name="browser_clip_url_hint">识别到厂商链接：%1$s</string>
     <string name="browser_save">保存</string>
     <string name="browser_cancel">取消</string>
 

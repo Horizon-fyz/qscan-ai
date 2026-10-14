@@ -438,6 +438,8 @@ class FloatingService : Service() {
             if (text.isNotEmpty()) {
                 val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 cm.setPrimaryClip(ClipData.newPlainText("answer", text))
+                // 自己写入的内容无需再被剪贴板识别流程处理。
+                ClipboardWatcher.markSelfWrite(text)
                 toast(getString(R.string.panel_status_copied))
             }
         }

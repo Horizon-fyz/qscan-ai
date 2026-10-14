@@ -14,6 +14,8 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         AppCompatDelegate.setDefaultNightMode(modeOf(Prefs.theme(this)))
+        // 启动即持续识别剪贴板：识别到的 API Key / 厂商链接交由前台界面处理。
+        ClipboardWatcher.start(this)
     }
 
     companion object {

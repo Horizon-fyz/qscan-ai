@@ -28,14 +28,29 @@ import com.quickanswer.app.databinding.ItemSavedKeyBinding
  * 用于申请与管理 API Key；其它站点一律拦截，避免被当作通用浏览器使用。
  *
  * 交互：先展示厂商列表；点选任一厂商在 WebView 中打开其控制台，顶栏「厂商」可随时退回列表。
- * 复制到 Key 后回到列表点「识别剪贴板」，即可识别来源厂商并保存到密钥库（OpenAI 兼容者可当答题通道）。
+ *
+ * 剪贴板识别为「持续监听」：由 [ClipboardWatcher] 在进程级监听，本页在前台时自动接收识别结果，
+ * 复制到的 Key 会直接弹出保存对话框；保留顶栏按钮作为手动补识别入口。
  */
-class ApiBrowserActivity : AppCompatActivity() {
+class ApiBrowserActivity : AppCompatActivity(), ClipboardWatcher.Listener {
 
     private lateinit var binding: ActivityApiBrowserBinding
 
     /** 最近打开的厂商：作为剪贴板来源识别的依据。 */
     private var currentVendor: Vendor? = null
+
+    /** 保存对话框是否正在显示：避免持续监听时重复叠加弹窗。 */
+    private var dialogShowing = false
+
+    override fun onStart() {
+        super.onStart()
+        ClipboardWatcher.addListener(this)
+    }
+
+    override fun onStop() {
+        ClipboardWatcher.removeListener(this)
+        super.onStop()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,6 +134,22 @@ class ApiBrowserActivity : AppCompatActivity() {
         return clip.getItemAt(0).coerceToText(this)?.toString()
     }
 
+    // [ClipboardWatcher.Listener] 持续监听回调：本页在前台时自动处理识别结果。
+
+    /** 识别到 API Key：自动弹出保存对话框；来源优先取当前浏览的厂商。 */
+    override fun onApiKey(text: String, vendor: Vendor?) {
+        if (isFinishing || isDestroyed || dialogShowing) return
+        val source = vendor ?: currentVendor
+        if (source != null) toast(getString(R.string.browser_clip_recognized, source.name))
+        showSaveDialog(text, source)
+    }
+
+    /** 识别到厂商控制台链接：仅提示，不自动跳转，避免打断当前操作。 */
+    override fun onVendorLink(vendor: Vendor) {
+        if (isFinishing || isDestroyed) return
+        toast(getString(R.string.browser_clip_url_hint, vendor.name))
+    }
+
     // ------------------------------------------------------------ 保存对话框
 
     /** [vendor] 为识别到的厂商；为空表示交由用户选择厂商或改填自定义请求地址。 */
@@ -187,6 +218,8 @@ class ApiBrowserActivity : AppCompatActivity() {
                 if (saveEntry(b, selected, custom)) dialog.dismiss()
             }
         }
+        dialog.setOnDismissListener { dialogShowing = false }
+        dialogShowing = true
         dialog.show()
     }
 
