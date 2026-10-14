@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="katex/katex.min.css">
+<script src="katex/katex.min.js"></script>
+<script src="katex/auto-render.min.js"></script>
+<script src="marked.min.js"></script>
+<style>
+  /* 设计令牌对齐 notion/DESIGN.md：ink #1A1A1A / charcoal #37352F / hairline #E5E3DF / surface #F6F5F4 / primary #5645D4 */
+  html, body { margin: 0; padding: 0; background: transparent; }
+  body {
+    font-family: -apple-system, "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #1A1A1A;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    -webkit-text-size-adjust: 100%;
+    padding: 0 1px 10px 1px;
+  }
+  #content > *:first-child { margin-top: 0; }
+  p { margin: 0 0 10px; }
+  h1, h2, h3, h4 { color: #37352F; margin: 16px 0 8px; line-height: 1.4; }
+  h1 { font-size: 19px; }
+  h2 { font-size: 17px; }
+  h3 { font-size: 16px; }
+  h4 { font-size: 15px; }
+  ul, ol { margin: 0 0 10px; padding-left: 22px; }
+  li { margin: 2px 0; }
+  li > p { margin: 0; }
+  strong { color: #37352F; font-weight: 600; }
+  a { color: #5645D4; text-decoration: none; }
+  hr { border: none; border-top: 1px solid #E5E3DF; margin: 14px 0; }
+  blockquote {
+    margin: 10px 0; padding: 6px 12px;
+    border-left: 3px solid #E5E3DF; color: #5D5B54; background: #FAFAF9;
+  }
+  code {
+    font-family: "SFMono-Regular", Consolas, "Roboto Mono", monospace;
+    font-size: 13px; background: #F6F5F4; border-radius: 4px;
+    padding: 1px 4px; color: #37352F;
+  }
+  pre {
+    background: #F6F5F4; border: 1px solid #E5E3DF; border-radius: 8px;
+    padding: 10px 12px; overflow-x: auto; margin: 0 0 10px;
+  }
+  pre code { background: none; padding: 0; font-size: 13px; }
+  table { border-collapse: collapse; width: 100%; margin: 0 0 10px; font-size: 14px; }
+  th, td { border: 1px solid #E5E3DF; padding: 6px 8px; text-align: left; }
+  th { background: #F6F5F4; font-weight: 600; color: #37352F; }
+  /* 行内/块级公式：块级公式允许横向滚动，避免宽矩阵撑破面板 */
+  .katex-display { margin: 10px 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+  .katex { font-size: 1.06em; }
+  .katex-error { color: #E03131 !important; }
+  .qa-empty { color: #BBB8B1; }
+</style>
+</head>
+<body>
+<div id="content"><span class="qa-empty">等待解答…</span></div>
+<script>
+(function () {
+  "use strict";
+
+  var contentEl = document.getElementById("content");
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // 中文文案由原生侧传入（strings.xml），避免把文案硬编码在这里
+  function setHtml(html) { contentEl.innerHTML = html; }
+
+  /* 保护公式区间：先抽出 $...$ / $$...$$ / \(...\) / \[...\] 换成占位符，
+     再交给 marked 解析，最后还原并交给 KaTeX。这样可避免 markdown 把
+     公式里的 \\ 换行、下划线、花括号当作转义或强调处理。 */
+  function protectMath(md) {
+    var store = [];
+    function hold(m) { store.push(escapeHtml(m)); return "@@QAMATH" + (store.length - 1) + "@@"; }
+    var out = md
+      .replace(/\$\$([\s\S]+?)\$\$/g, function (all, g) { return hold(all); })
+      .replace(/\\\[([\s\S]+?)\\\]/g, function (all, g) { return hold(all); })
+      .replace(/\\\(([\s\S]+?)\\\)/g, function (all, g) { return hold(all); })
+      .replace(/\$([^\$\n]+?)\$/g, function (all, g) { return hold(all); });
+    return { text: out, store: store };
+  }
+
+  function restoreMath(html, store) {
+    return html.replace(/@@QAMATH(\d+)@@/g, function (all, i) {
+      var v = store[+i];
+      return v === undefined ? all : v;
+    });
+  }
+
+  function isAtBottom() {
+    var scrolled = window.scrollY || document.documentElement.scrollTop || 0;
+    var viewport = window.innerHeight || document.documentElement.clientHeight;
+    var full = document.documentElement.scrollHeight;
+    return scrolled + viewport >= full - 24;
+  }
+
+  function renderMath() {
+    if (typeof renderMathInElement !== "function") return;
+    try {
+      renderMathInElement(contentEl, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "$", right: "$", display: false }
+        ],
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+        throwOnError: false,
+        errorColor: "#E03131",
+        strict: false,
+        trust: false,
+        macros: { "\\RR": "\\mathbb{R}", "\\NN": "\\mathbb{N}", "\\ZZ": "\\mathbb{Z}" }
+      });
+    } catch (e) { /* 渲染失败时保留原文 */ }
+  }
+
+  /* 原生侧唯一入口：renderAnswer(markdown, emptyText)
+     仅在用户已停留底部时才自动跟随滚动，避免长答案把首行顶出视野。 */
+  window.renderAnswer = function (markdown, emptyText) {
+    var md = (markdown == null) ? "" : String(markdown);
+    var follow = isAtBottom();
+    if (md.trim() === "") {
+      setHtml('<span class="qa-empty">' + escapeHtml(emptyText || "") + "</span>");
+      return;
+    }
+    var guarded = protectMath(md);
+    var html;
+    try {
+      html = (typeof marked !== "undefined" && marked.parse)
+        ? marked.parse(guarded.text, { gfm: true, breaks: true })
+        : escapeHtml(guarded.text).replace(/\n/g, "<br>");
+    } catch (e) {
+      html = escapeHtml(guarded.text).replace(/\n/g, "<br>");
+    }
+    setHtml(restoreMath(html, guarded.store));
+    renderMath();
+    if (follow) { window.scrollTo(0, document.documentElement.scrollHeight); }
+  };
+})();
+</script>
+</body>
+</html>

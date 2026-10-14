@@ -8,7 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.View
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -18,12 +18,15 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    /** API Key 输入框当前对应的提供商；切换模型时先保存旧 Key 再载入新 Key，避免互相覆盖 */
+    private var currentProvider = Prefs.PROVIDER_DEEPSEEK
+
     private val projectionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val data = result.data
         if (result.resultCode == RESULT_OK && data != null) {
-            Prefs.setApiKey(this, binding.etKey.text.toString())
+            saveKey()
             FloatingService.start(this, result.resultCode, data)
             binding.tvStatus.text = getString(R.string.status_started)
         } else {
@@ -46,11 +49,13 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.etKey.setText(Prefs.apiKey(this))
+        currentProvider = Prefs.providerOf(Prefs.model(this))
+        binding.etKey.setText(Prefs.apiKey(this, currentProvider))
         selectModel(Prefs.model(this))
 
         binding.segChat.setOnClickListener { selectModel(Prefs.MODEL_CHAT) }
         binding.segReasoner.setOnClickListener { selectModel(Prefs.MODEL_REASONER) }
+        binding.segQwen.setOnClickListener { selectModel(Prefs.MODEL_QWEN_VL) }
 
         binding.btnOverlay.setOnClickListener { requestOverlayPermission() }
         binding.btnNotify.setOnClickListener { requestNotificationPermission() }
@@ -71,17 +76,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun selectModel(model: String) {
-        val isChat = model != Prefs.MODEL_REASONER
-        Prefs.setModel(this, if (isChat) Prefs.MODEL_CHAT else Prefs.MODEL_REASONER)
+        val provider = Prefs.providerOf(model)
+        if (provider != currentProvider) {
+            // 切换提供商：先把输入框里的 Key 存回旧提供商，再载入新提供商的 Key
+            saveKey()
+            currentProvider = provider
+            binding.etKey.setText(Prefs.apiKey(this, provider))
+        }
+        Prefs.setModel(this, model)
 
-        binding.segChat.setBackgroundResource(
-            if (isChat) R.drawable.bg_segment_selected else R.drawable.bg_segment_default
+        styleSeg(binding.segChat, model == Prefs.MODEL_CHAT)
+        styleSeg(binding.segReasoner, model == Prefs.MODEL_REASONER)
+        styleSeg(binding.segQwen, model == Prefs.MODEL_QWEN_VL)
+
+        val isQwen = provider == Prefs.PROVIDER_QWEN
+        binding.etKey.setHint(if (isQwen) R.string.api_key_hint_qwen else R.string.api_key_hint)
+        binding.tvKeyNote.setText(if (isQwen) R.string.api_key_note_qwen else R.string.api_key_note)
+    }
+
+    private fun styleSeg(view: TextView, selected: Boolean) {
+        view.setBackgroundResource(
+            if (selected) R.drawable.bg_segment_selected else R.drawable.bg_segment_default
         )
-        binding.segReasoner.setBackgroundResource(
-            if (isChat) R.drawable.bg_segment_default else R.drawable.bg_segment_selected
-        )
-        binding.segChat.setTextColor(ContextCompat.getColor(this, if (isChat) R.color.on_dark else R.color.steel))
-        binding.segReasoner.setTextColor(ContextCompat.getColor(this, if (isChat) R.color.steel else R.color.on_dark))
+        view.setTextColor(ContextCompat.getColor(this, if (selected) R.color.on_dark else R.color.steel))
+    }
+
+    private fun saveKey() {
+        Prefs.setApiKey(this, currentProvider, binding.etKey.text.toString())
     }
 
     private fun requestOverlayPermission() {
@@ -121,7 +142,7 @@ class MainActivity : AppCompatActivity() {
             requestOverlayPermission()
             return
         }
-        Prefs.setApiKey(this, binding.etKey.text.toString())
+        saveKey()
         val mpm = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         projectionLauncher.launch(mpm.createScreenCaptureIntent())
     }

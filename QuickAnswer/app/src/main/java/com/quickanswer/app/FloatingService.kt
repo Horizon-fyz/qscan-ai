@@ -9,6 +9,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.media.projection.MediaProjection
@@ -17,22 +19,30 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Base64
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.IntentCompat
 import com.quickanswer.app.databinding.FloatBallBinding
 import com.quickanswer.app.databinding.FloatPanelBinding
+import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import kotlin.math.abs
 
 /**
  * 悬浮窗前台服务：
- * 悬浮球 → 截屏(MediaProjection) → 本地 OCR(ML Kit) → DeepSeek API 流式解答 → 结果面板展示。
+ * 悬浮球 → 截屏(MediaProjection) → …
+ *   · DeepSeek 文本模型：本地 OCR(ML Kit) 出题 → 流式解答；
+ *   · 千问视觉模型：截图转 base64 直传多模态模型 → 流式解答。
+ * 答案由内嵌 KaTeX 的 WebView 渲染（完整支持 LaTeX），题目区仍用 MathText 轻量渲染。
  */
 class FloatingService : Service() {
 
@@ -47,13 +57,24 @@ class FloatingService : Service() {
     private var projection: MediaProjection? = null
     private var capture: ScreenCapture? = null
     private var ocr: OcrEngine? = null
-    private var client: DeepSeekClient? = null
+    private var client: ChatClient? = null
 
     /** 防止截屏/识别阶段重复触发 */
     private var busy = false
 
-    /** 答案原文累积缓冲：流式增量先累积，再整体用 MathText 渲染，保证公式跨 chunk 也能正确解析 */
+    /** 答案原文累积缓冲：流式增量先累积，再整体交给 WebView 渲染，保证公式跨 chunk 也能正确解析 */
     private val answerBuffer = StringBuilder()
+
+    /** WebView 中 answer.html 是否已加载完成（未完成时的渲染请求先缓存） */
+    private var webReady = false
+    private var pendingAnswer: String? = null
+
+    /** 流式渲染节流：最多每 RENDER_THROTTLE_MS 触发一次 WebView 重绘 */
+    private var renderScheduled = false
+    private val renderTick = Runnable {
+        renderScheduled = false
+        renderAnswer(answerBuffer.toString())
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -263,8 +284,10 @@ class FloatingService : Service() {
         panel = binding
 
         val dm = resources.displayMetrics
+        // FLAG_HARDWARE_ACCELERATED：叠加层默认可能非硬件加速，会导致 WebView 渲染空白
         val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+            WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
         // 同理：面板宽高必须在 WM 参数上显式指定，否则会被压成内容尺寸。
         // 高度固定后，内部上下两区才能按 weight 等分。
         val panelWidth = (PANEL_WIDTH_DP * dm.density).toInt()
@@ -311,10 +334,12 @@ class FloatingService : Service() {
             }
         })
 
+        setupWebView(binding.webAnswer)
+
         binding.btnClose.setOnClickListener { panel?.root?.visibility = View.GONE }
         binding.btnReread.setOnClickListener { doCapture() }
         binding.btnCopy.setOnClickListener {
-            val text = binding.tvAnswer.text?.toString().orEmpty()
+            val text = answerBuffer.toString()
             if (text.isNotEmpty()) {
                 val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 cm.setPrimaryClip(ClipData.newPlainText("answer", text))
@@ -323,6 +348,49 @@ class FloatingService : Service() {
         }
         windowManager.addView(binding.root, panelParams)
         return binding
+    }
+
+    /** 初始化答案区 WebView：加载离线模板（内嵌 KaTeX + marked），开启 JS 以便流式重绘。 */
+    private fun setupWebView(web: WebView) {
+        web.setBackgroundColor(Color.TRANSPARENT)
+        web.isVerticalScrollBarEnabled = true
+        web.settings.javaScriptEnabled = true
+        web.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                webReady = true
+                pendingAnswer?.let { renderAnswer(it) }
+                pendingAnswer = null
+            }
+        }
+        web.loadUrl(ANSWER_PAGE)
+    }
+
+    /**
+     * 用累积的 markdown/LaTeX 原文重绘答案区。
+     * 通过 JSON 字符串转义把内容安全地传给页面内的 renderAnswer()，避免注入与截断。
+     */
+    private fun renderAnswer(markdown: String) {
+        val p = panel ?: return
+        if (!webReady) {
+            pendingAnswer = markdown
+            return
+        }
+        val mdArg = JSONObject.quote(markdown)
+        val emptyArg = JSONObject.quote(getString(R.string.panel_answer_empty))
+        p.webAnswer.evaluateJavascript("window.renderAnswer($mdArg, $emptyArg);", null)
+    }
+
+    /** 节流渲染：流式增量先入缓冲，最多每 RENDER_THROTTLE_MS 重绘一次。 */
+    private fun scheduleRender() {
+        if (renderScheduled) return
+        renderScheduled = true
+        handler.postDelayed(renderTick, RENDER_THROTTLE_MS)
+    }
+
+    private fun renderNow() {
+        handler.removeCallbacks(renderTick)
+        renderScheduled = false
+        renderAnswer(answerBuffer.toString())
     }
 
     private fun showPanel() {
@@ -341,6 +409,9 @@ class FloatingService : Service() {
         p.root.visibility = View.GONE
         ball?.root?.visibility = View.GONE
 
+        // 视觉提供商（千问）：跳过本地 OCR，截图直传多模态模型
+        val vision = Prefs.isVision(Prefs.providerOf(Prefs.model(this)))
+
         // 收起悬浮层后稍等一帧再截屏，避免把悬浮球/面板截进去
         handler.postDelayed({
             Thread {
@@ -350,13 +421,23 @@ class FloatingService : Service() {
                     ball?.root?.visibility = View.VISIBLE
                     p.tvStatus.text = getString(R.string.panel_status_capturing)
                     answerBuffer.setLength(0)
-                    p.tvAnswer.text = getString(R.string.panel_answer_empty)
+                    renderAnswer("")
                     p.tvQuestion.text = getString(R.string.panel_question_empty)
                 }
                 if (bitmap == null) {
                     handler.post {
                         p.tvStatus.text = getString(R.string.panel_status_capture_fail)
                         busy = false
+                    }
+                    return@Thread
+                }
+                if (vision) {
+                    val base64 = bitmapToJpegBase64(bitmap)
+                    bitmap.recycle()
+                    handler.post {
+                        p.tvQuestion.text = getString(R.string.panel_question_vision)
+                        busy = false
+                        askVision(base64)
                     }
                     return@Thread
                 }
@@ -371,7 +452,7 @@ class FloatingService : Service() {
                             } else {
                                 p.tvQuestion.text = MathText.render(text)
                                 busy = false
-                                askDeepSeek(text)
+                                askModel(text)
                             }
                         }
                     },
@@ -387,42 +468,88 @@ class FloatingService : Service() {
         }, CAPTURE_DELAY_MS)
     }
 
-    private fun askDeepSeek(question: String) {
-        val key = Prefs.apiKey(this)
+    /** 截图转 JPEG base64（长边限制在 [VISION_MAX_SIDE] 内，兼顾清晰度与上传体积）。 */
+    private fun bitmapToJpegBase64(bitmap: Bitmap): String {
+        val maxSide = maxOf(bitmap.width, bitmap.height)
+        val scaled = if (maxSide > VISION_MAX_SIDE) {
+            val s = VISION_MAX_SIDE.toFloat() / maxSide
+            Bitmap.createScaledBitmap(
+                bitmap,
+                (bitmap.width * s).toInt().coerceAtLeast(1),
+                (bitmap.height * s).toInt().coerceAtLeast(1),
+                true
+            )
+        } else {
+            bitmap
+        }
+        val bytes = ByteArrayOutputStream()
+        scaled.compress(Bitmap.CompressFormat.JPEG, 82, bytes)
+        if (scaled !== bitmap) scaled.recycle()
+        return Base64.encodeToString(bytes.toByteArray(), Base64.NO_WRAP)
+    }
+
+    /** 文本解答路径（DeepSeek）：传入本地 OCR 得到的题目文字。 */
+    private fun askModel(question: String) {
+        val key = Prefs.apiKeyForModel(this)
         if (key.isBlank()) {
             panel?.tvStatus?.text = getString(R.string.status_need_key)
             return
         }
         panel?.tvStatus?.text = getString(R.string.panel_status_asking)
         answerBuffer.setLength(0)
-        panel?.tvAnswer?.text = ""
+        renderAnswer("")
 
-        val c = DeepSeekClient(key, Prefs.model(this))
+        val model = Prefs.model(this)
+        val c = ChatClient(key, model, ChatClient.endpointFor(model))
         client = c
         Thread {
             c.stream(
                 question = question,
-                onDelta = { delta ->
-                    handler.post {
-                        answerBuffer.append(delta)
-                        val p = panel ?: return@post
-                        p.tvAnswer.text = MathText.render(answerBuffer.toString())
-                        p.svAnswer.post {
-                            // 仅当用户已在底部时才自动跟随，避免长答案把首行顶出视野
-                            val child = p.svAnswer.getChildAt(0) ?: return@post
-                            val atBottom = p.svAnswer.height + p.svAnswer.scrollY >= child.height - 8
-                            if (atBottom) p.svAnswer.fullScroll(View.FOCUS_DOWN)
-                        }
-                    }
-                },
-                onDone = { handler.post { panel?.tvStatus?.text = "" } },
+                onDelta = { delta -> handleDelta(delta) },
+                onDone = { handler.post { finishStream() } },
                 onError = { msg ->
-                    handler.post {
-                        panel?.tvStatus?.text = getString(R.string.panel_status_error) + msg
-                    }
+                    handler.post { panel?.tvStatus?.text = getString(R.string.panel_status_error) + msg }
                 }
             )
         }.start()
+    }
+
+    /** 视觉解答路径（千问）：传入截图的 JPEG base64，由多模态模型直接读题作答。 */
+    private fun askVision(imageBase64: String) {
+        val key = Prefs.apiKeyForModel(this)
+        if (key.isBlank()) {
+            panel?.tvStatus?.text = getString(R.string.status_need_key)
+            return
+        }
+        panel?.tvStatus?.text = getString(R.string.panel_status_asking)
+        answerBuffer.setLength(0)
+        renderAnswer("")
+
+        val model = Prefs.model(this)
+        val c = ChatClient(key, model, ChatClient.endpointFor(model))
+        client = c
+        Thread {
+            c.streamImage(
+                imageBase64 = imageBase64,
+                onDelta = { delta -> handleDelta(delta) },
+                onDone = { handler.post { finishStream() } },
+                onError = { msg ->
+                    handler.post { panel?.tvStatus?.text = getString(R.string.panel_status_error) + msg }
+                }
+            )
+        }.start()
+    }
+
+    private fun handleDelta(delta: String) {
+        handler.post {
+            answerBuffer.append(delta)
+            scheduleRender()
+        }
+    }
+
+    private fun finishStream() {
+        renderNow()
+        panel?.tvStatus?.text = ""
     }
 
     private fun cancelStream() {
@@ -446,9 +573,15 @@ class FloatingService : Service() {
         projection?.stop()
         projection = null
         ball?.let { runCatching { windowManager.removeView(it.root) } }
-        panel?.let { runCatching { windowManager.removeView(it.root) } }
+        panel?.let {
+            runCatching { it.webAnswer.stopLoading() }
+            runCatching { it.webAnswer.destroy() }
+            runCatching { windowManager.removeView(it.root) }
+        }
         ball = null
         panel = null
+        webReady = false
+        pendingAnswer = null
         stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()
     }
@@ -461,6 +594,14 @@ class FloatingService : Service() {
         private const val BALL_MARGIN_DP = 8
         private const val PANEL_WIDTH_DP = 320
         private const val PANEL_HEIGHT_DP = 560
+
+        /** 流式渲染节流间隔（毫秒） */
+        private const val RENDER_THROTTLE_MS = 120L
+
+        /** 视觉直传时截图长边上限（像素），控制上传体积与响应速度 */
+        private const val VISION_MAX_SIDE = 1600
+
+        private const val ANSWER_PAGE = "file:///android_asset/answer.html"
 
         const val ACTION_START = "com.quickanswer.app.START"
         const val ACTION_STOP = "com.quickanswer.app.STOP"

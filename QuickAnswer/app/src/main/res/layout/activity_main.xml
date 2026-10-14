@@ -115,6 +115,7 @@
                     android:textSize="16sp" />
 
                 <TextView
+                    android:id="@+id/tvKeyNote"
                     style="@style/Tv.Caption"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -168,6 +169,24 @@
                         android:gravity="center"
                         android:maxLines="1"
                         android:text="@string/model_reasoner"
+                        android:textColor="@color/steel"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/segQwen"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/control_height"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeMinTextSize="10sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:autoSizeTextType="uniform"
+                        android:background="@drawable/bg_segment_default"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/model_qwen_vision"
                         android:textColor="@color/steel"
                         android:textSize="14sp" />
                 </LinearLayout>

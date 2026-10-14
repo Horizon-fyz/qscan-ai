@@ -120,21 +120,15 @@
             android:text="@string/panel_answer_label"
             android:textColor="@color/brand_purple_800" />
 
-        <ScrollView
-            android:id="@+id/svAnswer"
+        <!-- 答案区：离线 KaTeX 完整渲染 LaTeX（matrices / 分式 / 积分 / 对齐环境等），自带滚动 -->
+        <WebView
+            android:id="@+id/webAnswer"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="@dimen/space_xs"
             android:layout_weight="1"
-            android:scrollbars="vertical">
-
-            <TextView
-                android:id="@+id/tvAnswer"
-                style="@style/Tv.Body"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/panel_answer_empty" />
-        </ScrollView>
+            android:background="@android:color/transparent"
+            android:scrollbars="vertical" />
     </LinearLayout>
 
     <!-- 操作 -->
