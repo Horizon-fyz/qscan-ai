@@ -60,6 +60,9 @@ class MainActivity : AppCompatActivity() {
         binding.cardFiles.setOnClickListener {
             startActivity(Intent(this, FileManagerActivity::class.java))
         }
+        binding.cardBrowser.setOnClickListener {
+            startActivity(Intent(this, ApiBrowserActivity::class.java))
+        }
 
         binding.btnOverlay.setOnClickListener { requestOverlayPermission() }
         binding.btnNotify.setOnClickListener { requestNotificationPermission() }

@@ -59,6 +59,11 @@
             android:name=".FileManagerActivity"
             android:exported="false" />
 
+        <!-- 开放平台：内置浏览器，仅限访问各厂商开放平台 / 控制台 -->
+        <activity
+            android:name=".ApiBrowserActivity"
+            android:exported="false" />
+
         <service
             android:name=".FloatingService"
             android:exported="false"

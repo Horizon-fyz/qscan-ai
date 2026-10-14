@@ -178,6 +178,48 @@
                     android:textSize="22sp" />
             </LinearLayout>
 
+            <!-- 入口：开放平台（内置浏览器，仅限厂商 API 页面） -->
+            <LinearLayout
+                android:id="@+id/cardBrowser"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:background="@drawable/bg_card_ripple"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/space_xl">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Tv.SectionTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/entry_browser_title" />
+
+                    <TextView
+                        style="@style/Tv.BodySm"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xxs"
+                        android:text="@string/entry_browser_desc" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:text="›"
+                    android:textColor="@color/stone"
+                    android:textSize="22sp" />
+            </LinearLayout>
+
             <!-- 启动控制卡（card-base） -->
             <LinearLayout
                 android:layout_width="match_parent"

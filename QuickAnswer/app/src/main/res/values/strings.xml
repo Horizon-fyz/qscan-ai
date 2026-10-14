@@ -204,4 +204,13 @@
     <string name="fm_range_none">请先滑动选择至少两项</string>
     <string name="fm_same_dir">两个窗口位于同一目录</string>
     <string name="fm_into_self">无法复制到所选目录内</string>
+
+    <!-- 开放平台（内置浏览器，仅限厂商 API 页面） -->
+    <string name="entry_browser_title">开放平台</string>
+    <string name="entry_browser_desc">内置浏览器，直达各大厂商的 API Key 申请与管理页</string>
+    <string name="browser_title">开放平台</string>
+    <string name="browser_portal">厂商</string>
+    <string name="browser_note">仅可访问下列厂商的开放平台页面，用于申请与管理 API Key；其它站点会被自动拦截。</string>
+    <string name="browser_blocked">仅支持访问各厂商开放平台页面</string>
+    <string name="browser_load_failed">页面加载失败，请检查网络</string>
 </resources>
