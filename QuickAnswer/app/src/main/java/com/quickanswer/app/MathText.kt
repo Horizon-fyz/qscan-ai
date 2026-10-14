@@ -1,8 +1,10 @@
 package com.quickanswer.app
 
+import android.graphics.Typeface
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.text.style.SubscriptSpan
 import android.text.style.SuperscriptSpan
 
@@ -65,10 +67,29 @@ object MathText {
                 '_' -> i = script(raw, i + 1, out, superscript = false)
                 '$' -> i++          // 丢弃数学定界符
                 '\r' -> i++         // 归一化换行
+                '*' -> i = emphasis(raw, i, out)
                 else -> { out.append(c); i++ }
             }
         }
         return out
+    }
+
+    /** 处理 Markdown 加粗 **...**；不成对出现的 * 原样保留 */
+    private fun emphasis(s: String, start: Int, out: SpannableStringBuilder): Int {
+        if (start + 1 < s.length && s[start + 1] == '*') {
+            val end = s.indexOf("**", start + 2)
+            if (end >= 0) {
+                val from = out.length
+                out.append(render(s.substring(start + 2, end)))
+                val to = out.length
+                if (to > from) {
+                    out.setSpan(StyleSpan(Typeface.BOLD), from, to, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+                return end + 2
+            }
+        }
+        out.append('*')
+        return start + 1
     }
 
     /** 处理 \\ 开头的命令，返回处理后的新下标 */

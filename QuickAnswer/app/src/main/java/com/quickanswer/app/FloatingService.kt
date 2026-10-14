@@ -407,7 +407,12 @@ class FloatingService : Service() {
                         answerBuffer.append(delta)
                         val p = panel ?: return@post
                         p.tvAnswer.text = MathText.render(answerBuffer.toString())
-                        p.svAnswer.post { p.svAnswer.fullScroll(View.FOCUS_DOWN) }
+                        p.svAnswer.post {
+                            // 仅当用户已在底部时才自动跟随，避免长答案把首行顶出视野
+                            val child = p.svAnswer.getChildAt(0) ?: return@post
+                            val atBottom = p.svAnswer.height + p.svAnswer.scrollY >= child.height - 8
+                            if (atBottom) p.svAnswer.fullScroll(View.FOCUS_DOWN)
+                        }
                     }
                 },
                 onDone = { handler.post { panel?.tvStatus?.text = "" } },
