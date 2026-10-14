@@ -10,9 +10,9 @@ import java.net.URL
 /**
  * OpenAI 兼容的 chat/completions 客户端（SSE 流式），零第三方依赖。
  *
- * 支持两类调用：
- *  - [stream]      文本问答（DeepSeek：本地 OCR 出题目文字后提问）；
- *  - [streamImage] 多模态视觉问答（千问 / Qwen-VL：截图转 base64 直接读题作答）。
+ * 两段式流水线：
+ *  - [streamImage] 视觉读题（千问 / Qwen-VL：截图转 base64，只抽取题目文字，含 LaTeX）；
+ *  - [stream]      文本答题（DeepSeek：把读题结果交给推理模型解答）。
  *
  * 端点由 [endpointFor] 依模型名解析，便于后续接入更多兼容 OpenAI 协议的服务。
  */
@@ -45,7 +45,7 @@ class ChatClient(
     }
 
     /**
-     * 视觉问答：把截图（JPEG）以 data URL 形式直传给多模态模型，跳过本地 OCR。
+     * 视觉读题：把截图（JPEG）以 data URL 形式直传给多模态模型，只抽取题目文字（含 LaTeX）。
      * 不发送 system 角色，改为把指令并入 user 文本，兼容部分视觉模型的角色限制。
      */
     fun streamImage(
@@ -59,27 +59,30 @@ class ChatClient(
             .put("image_url", JSONObject().put("url", "data:image/jpeg;base64,$imageBase64"))
         val textPart = JSONObject()
             .put("type", "text")
-            .put("text", VISION_PROMPT)
+            .put("text", READ_PROMPT)
 
         val messages = JSONArray().put(
             JSONObject()
                 .put("role", "user")
                 .put("content", JSONArray().put(imagePart).put(textPart))
         )
-        post(messages, onDelta, onDone, onError)
+        // 读题属纯转写任务，无需思考链；关闭思考可显著降本提速。
+        post(messages, onDelta, onDone, onError, disableThinking = true)
     }
 
     private fun post(
         messages: JSONArray,
         onDelta: (String) -> Unit,
         onDone: () -> Unit,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
+        disableThinking: Boolean = false
     ) {
         try {
             val payload = JSONObject().apply {
                 put("model", model)
                 put("stream", true)
                 put("messages", messages)
+                if (disableThinking) put("enable_thinking", false)
             }
 
             val c = URL(endpoint).openConnection() as HttpURLConnection
@@ -147,7 +150,7 @@ class ChatClient(
                 "\\begin{aligned}...\\end{aligned}、\\begin{pmatrix}...\\end{pmatrix}）均可直接书写，无需回避。"
 
         private const val SYSTEM_PROMPT =
-            "你是一个专业的答题助手。用户会发来从手机屏幕上通过 OCR 识别出的题目文字" +
+            "你是一个专业的答题助手。用户会发来由视觉模型从手机屏幕截图中识别出的题目文字" +
                 "（可能存在少量识别错误、缺少选项或公式符号错乱）。请：\n" +
                 "1) 先判断题型并简要分析；\n" +
                 "2) 给出清晰的解题步骤；\n" +
@@ -155,12 +158,15 @@ class ChatClient(
                 "若题目文字明显有误，请基于上下文合理推断并说明。回答使用中文，简洁准确。\n" +
                 LATEX_RULE
 
-        private const val VISION_PROMPT =
-            "请阅读这张手机屏幕截图中的题目并作答。要求：\n" +
-                "1) 先用一两句话概括你识别到的题目内容，便于用户核对；\n" +
-                "2) 给出清晰的解题步骤；\n" +
-                "3) 最后用【答案】明确给出最终结果。\n" +
-                "若截图中有多道题目或内容不完整，请选择最主要的一道作答并说明。回答使用中文，简洁准确。\n" +
-                LATEX_RULE
+        /** 读题提示词：只做识别与转写，不解答，供后续 DeepSeek 答题使用。 */
+        private const val READ_PROMPT =
+            "你是一个题目识别助手。请仔细阅读这张手机屏幕截图，把其中的题目完整、准确地转为文字，" +
+                "供另一个模型解答。要求：\n" +
+                "1) 只做识别与转写，不要解题、不要给答案、不要添加任何分析或评价；\n" +
+                "2) 忠实还原题干、选项（如有）、已知条件、数值与单位；\n" +
+                "3) 所有数学公式与符号（分式、根式、上下标、积分、求和、矩阵、方程组等）" +
+                "一律使用标准 LaTeX 表示：行内用 \$...\$，独立成行的公式用 \$\$...\$\$；\n" +
+                "4) 若截图中有多道题，按先后顺序全部转写，用空行分隔；\n" +
+                "5) 只输出题目文字，不要任何前言、后缀或解释性语句。"
     }
 }

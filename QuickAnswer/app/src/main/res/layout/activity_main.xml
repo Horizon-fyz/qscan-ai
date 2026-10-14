@@ -96,10 +96,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_lg"
-                    android:text="@string/api_key_title" />
+                    android:text="@string/api_key_qwen_title" />
 
                 <EditText
-                    android:id="@+id/etKey"
+                    android:id="@+id/etQwenKey"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/control_height"
                     android:layout_marginTop="@dimen/space_xs"
@@ -115,7 +115,36 @@
                     android:textSize="16sp" />
 
                 <TextView
-                    android:id="@+id/tvKeyNote"
+                    style="@style/Tv.Caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="@string/api_key_note_qwen" />
+
+                <TextView
+                    style="@style/Tv.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:text="@string/api_key_ds_title" />
+
+                <EditText
+                    android:id="@+id/etDsKey"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/control_height"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:background="@drawable/bg_input"
+                    android:fontFamily="sans-serif"
+                    android:hint="@string/api_key_hint"
+                    android:inputType="textVisiblePassword"
+                    android:paddingStart="@dimen/space_md"
+                    android:paddingEnd="@dimen/space_md"
+                    android:singleLine="true"
+                    android:textColor="@color/ink"
+                    android:textColorHint="@color/muted"
+                    android:textSize="16sp" />
+
+                <TextView
                     style="@style/Tv.Caption"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -129,7 +158,7 @@
                     android:layout_marginTop="@dimen/space_lg"
                     android:text="@string/model_title" />
 
-                <!-- 模型切换：pill-tab（选中 = ink-deep 实底白字，未选中 = 透明 + hairline 描边） -->
+                <!-- 答题模型切换：pill-tab（选中 = ink-deep 实底白字，未选中 = 透明 + hairline 描边） -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -169,24 +198,6 @@
                         android:gravity="center"
                         android:maxLines="1"
                         android:text="@string/model_reasoner"
-                        android:textColor="@color/steel"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/segQwen"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/control_height"
-                        android:layout_marginStart="@dimen/space_xs"
-                        android:layout_weight="1"
-                        android:autoSizeMaxTextSize="14sp"
-                        android:autoSizeMinTextSize="10sp"
-                        android:autoSizeStepGranularity="1sp"
-                        android:autoSizeTextType="uniform"
-                        android:background="@drawable/bg_segment_default"
-                        android:fontFamily="sans-serif-medium"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:text="@string/model_qwen_vision"
                         android:textColor="@color/steel"
                         android:textSize="14sp" />
                 </LinearLayout>

@@ -3,21 +3,20 @@
     <string name="app_name">答题助手</string>
     <string name="eyebrow">AI 答题助手</string>
     <string name="subtitle">截屏识别题目 · AI 智能解答</string>
-    <string name="footer">截屏内容仅在本机识别；选择「千问视觉」时截图会直接发送给所选 AI 服务。</string>
+    <string name="footer">截屏会先发送给千问视觉模型读题，再交由 DeepSeek 解答；两把 Key 仅保存在本机。</string>
 
     <string name="usage_title">使用说明</string>
-    <string name="usage_body">1. 填写 API Key 并选择模型：deepseek-chat / deepseek-reasoner 先在本机 OCR 识别题目再提问；千问视觉则跳过 OCR，直接把截图交给多模态模型读题作答。\n2. 依次授予悬浮窗、通知权限。\n3. 点击「启动悬浮窗」，在系统弹窗中允许「屏幕录制/投屏」。\n4. 回到任意页面，点击屏幕上的悬浮球「答」，即可自动截屏并由所选模型解答。\n\n提示：截屏瞬间悬浮球会自动隐藏，避免遮挡题目；答案为完整 LaTeX 渲染。</string>
+    <string name="usage_body">1. 分别填写「千问视觉 Key」与「DeepSeek Key」：千问负责读题（截图转文字），DeepSeek 负责思考作答。\n2. 选择答题模型：deepseek-chat / deepseek-reasoner。\n3. 依次授予悬浮窗、通知权限。\n4. 点击「启动悬浮窗」，在系统弹窗中允许「屏幕录制/投屏」。\n5. 回到任意页面，点击屏幕上的悬浮球「答」，即可自动截屏并解答。\n\n提示：截屏瞬间悬浮球会自动隐藏，避免遮挡题目；答案为完整 LaTeX 渲染。</string>
 
-    <string name="config_title">模型配置</string>
-    <string name="api_key_title">API Key</string>
+    <string name="config_title">模型与密钥</string>
+    <string name="api_key_qwen_title">千问视觉 Key（读题）</string>
+    <string name="api_key_ds_title">DeepSeek Key（答题）</string>
     <string name="api_key_hint">sk-xxxxxxxx</string>
-    <string name="api_key_hint_qwen">sk-xxxxxxxx</string>
-    <string name="api_key_note">DeepSeek Key：在 platform.deepseek.com 申请，仅保存在本机。</string>
-    <string name="api_key_note_qwen">百炼 Key：在 bailian.console.aliyun.com 申请，仅保存在本机。</string>
-    <string name="model_title">模型</string>
+    <string name="api_key_note_qwen">百炼 Key：在 bailian.console.aliyun.com 申请，用于截图读题。</string>
+    <string name="api_key_note">DeepSeek Key：在 platform.deepseek.com 申请，用于思考作答。</string>
+    <string name="model_title">答题模型</string>
     <string name="model_chat">deepseek-chat</string>
     <string name="model_reasoner">deepseek-reasoner</string>
-    <string name="model_qwen_vision">千问视觉</string>
 
     <string name="step_overlay">1. 授予悬浮窗权限</string>
     <string name="step_notify">2. 授予通知权限</string>
@@ -25,7 +24,7 @@
     <string name="stop_service">停止悬浮窗</string>
 
     <string name="status_idle">填写信息后即可启动。</string>
-    <string name="status_need_key">请先填写 API Key。</string>
+    <string name="status_need_key">请先分别填写千问视觉 Key 与 DeepSeek Key。</string>
     <string name="status_need_overlay">请先授予悬浮窗权限。</string>
     <string name="status_started">悬浮窗已启动，回到任意页面点击悬浮球即可。</string>
     <string name="status_stopped">悬浮窗已停止。</string>
@@ -41,13 +40,14 @@
     <string name="panel_question_label">题目识别</string>
     <string name="panel_answer_label">答案输出</string>
     <string name="panel_question_empty">—</string>
-    <string name="panel_question_vision">已截图直传视觉模型…</string>
+    <string name="panel_question_reading">千问视觉读题中…</string>
     <string name="panel_answer_empty">等待解答…</string>
     <string name="btn_copy">复制</string>
     <string name="btn_reread">重识别</string>
 
-    <string name="panel_status_capturing">正在截屏识别…</string>
-    <string name="panel_status_asking">AI 正在解答…</string>
+    <string name="panel_status_capturing">正在截屏…</string>
+    <string name="panel_status_reading">千问视觉正在读题…</string>
+    <string name="panel_status_asking">DeepSeek 正在解答…</string>
     <string name="panel_status_no_text">未识别到文字，请调整后重试。</string>
     <string name="panel_status_capture_fail">截屏失败，请重新启动悬浮窗。</string>
     <string name="panel_status_error">请求失败：</string>

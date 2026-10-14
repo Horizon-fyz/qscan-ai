@@ -18,15 +18,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    /** API Key 输入框当前对应的提供商；切换模型时先保存旧 Key 再载入新 Key，避免互相覆盖 */
-    private var currentProvider = Prefs.PROVIDER_DEEPSEEK
-
     private val projectionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val data = result.data
         if (result.resultCode == RESULT_OK && data != null) {
-            saveKey()
+            saveKeys()
             FloatingService.start(this, result.resultCode, data)
             binding.tvStatus.text = getString(R.string.status_started)
         } else {
@@ -49,13 +46,16 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        currentProvider = Prefs.providerOf(Prefs.model(this))
-        binding.etKey.setText(Prefs.apiKey(this, currentProvider))
-        selectModel(Prefs.model(this))
+        binding.etQwenKey.setText(Prefs.apiKey(this, Prefs.PROVIDER_QWEN))
+        binding.etDsKey.setText(Prefs.apiKey(this, Prefs.PROVIDER_DEEPSEEK))
+
+        // 旧版本可能残留「千问视觉」等非答题模型，回落到默认文本模型
+        val saved = Prefs.model(this)
+        val answerModel = if (saved == Prefs.MODEL_REASONER) Prefs.MODEL_REASONER else Prefs.MODEL_CHAT
+        selectModel(answerModel)
 
         binding.segChat.setOnClickListener { selectModel(Prefs.MODEL_CHAT) }
         binding.segReasoner.setOnClickListener { selectModel(Prefs.MODEL_REASONER) }
-        binding.segQwen.setOnClickListener { selectModel(Prefs.MODEL_QWEN_VL) }
 
         binding.btnOverlay.setOnClickListener { requestOverlayPermission() }
         binding.btnNotify.setOnClickListener { requestNotificationPermission() }
@@ -76,22 +76,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun selectModel(model: String) {
-        val provider = Prefs.providerOf(model)
-        if (provider != currentProvider) {
-            // 切换提供商：先把输入框里的 Key 存回旧提供商，再载入新提供商的 Key
-            saveKey()
-            currentProvider = provider
-            binding.etKey.setText(Prefs.apiKey(this, provider))
-        }
         Prefs.setModel(this, model)
-
         styleSeg(binding.segChat, model == Prefs.MODEL_CHAT)
         styleSeg(binding.segReasoner, model == Prefs.MODEL_REASONER)
-        styleSeg(binding.segQwen, model == Prefs.MODEL_QWEN_VL)
-
-        val isQwen = provider == Prefs.PROVIDER_QWEN
-        binding.etKey.setHint(if (isQwen) R.string.api_key_hint_qwen else R.string.api_key_hint)
-        binding.tvKeyNote.setText(if (isQwen) R.string.api_key_note_qwen else R.string.api_key_note)
     }
 
     private fun styleSeg(view: TextView, selected: Boolean) {
@@ -101,8 +88,9 @@ class MainActivity : AppCompatActivity() {
         view.setTextColor(ContextCompat.getColor(this, if (selected) R.color.on_dark else R.color.steel))
     }
 
-    private fun saveKey() {
-        Prefs.setApiKey(this, currentProvider, binding.etKey.text.toString())
+    private fun saveKeys() {
+        Prefs.setApiKey(this, Prefs.PROVIDER_QWEN, binding.etQwenKey.text.toString())
+        Prefs.setApiKey(this, Prefs.PROVIDER_DEEPSEEK, binding.etDsKey.text.toString())
     }
 
     private fun requestOverlayPermission() {
@@ -133,7 +121,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startFloating() {
-        if (binding.etKey.text.toString().trim().isEmpty()) {
+        if (binding.etQwenKey.text.toString().trim().isEmpty() ||
+            binding.etDsKey.text.toString().trim().isEmpty()
+        ) {
             binding.tvStatus.text = getString(R.string.status_need_key)
             return
         }
@@ -142,7 +132,7 @@ class MainActivity : AppCompatActivity() {
             requestOverlayPermission()
             return
         }
-        saveKey()
+        saveKeys()
         val mpm = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         projectionLauncher.launch(mpm.createScreenCaptureIntent())
     }

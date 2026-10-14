@@ -39,10 +39,10 @@ import kotlin.math.abs
 
 /**
  * 悬浮窗前台服务：
- * 悬浮球 → 截屏(MediaProjection) → …
- *   · DeepSeek 文本模型：本地 OCR(ML Kit) 出题 → 流式解答；
- *   · 千问视觉模型：截图转 base64 直传多模态模型 → 流式解答。
- * 答案由内嵌 KaTeX 的 WebView 渲染（完整支持 LaTeX），题目区仍用 MathText 轻量渲染。
+ * 悬浮球 → 截屏(MediaProjection) → 两段式流水线：
+ *   ① 千问视觉读题：截图转 base64 交给 Qwen-VL，只抽取题目文字（含 LaTeX）；
+ *   ② DeepSeek 答题：把读出的题目文字交给推理模型，流式解答。
+ * 答案由内嵌 KaTeX 的 WebView 渲染（完整支持 LaTeX），题目区用 MathText 轻量渲染。
  */
 class FloatingService : Service() {
 
@@ -56,7 +56,6 @@ class FloatingService : Service() {
 
     private var projection: MediaProjection? = null
     private var capture: ScreenCapture? = null
-    private var ocr: OcrEngine? = null
     private var client: ChatClient? = null
 
     /** 防止截屏/识别阶段重复触发 */
@@ -79,7 +78,6 @@ class FloatingService : Service() {
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        ocr = OcrEngine()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -409,9 +407,6 @@ class FloatingService : Service() {
         p.root.visibility = View.GONE
         ball?.root?.visibility = View.GONE
 
-        // 视觉提供商（千问）：跳过本地 OCR，截图直传多模态模型
-        val vision = Prefs.isVision(Prefs.providerOf(Prefs.model(this)))
-
         // 收起悬浮层后稍等一帧再截屏，避免把悬浮球/面板截进去
         handler.postDelayed({
             Thread {
@@ -431,39 +426,9 @@ class FloatingService : Service() {
                     }
                     return@Thread
                 }
-                if (vision) {
-                    val base64 = bitmapToJpegBase64(bitmap)
-                    bitmap.recycle()
-                    handler.post {
-                        p.tvQuestion.text = getString(R.string.panel_question_vision)
-                        busy = false
-                        askVision(base64)
-                    }
-                    return@Thread
-                }
-                ocr?.recognize(
-                    bitmap,
-                    onSuccess = { text ->
-                        bitmap.recycle()
-                        handler.post {
-                            if (text.isEmpty()) {
-                                p.tvStatus.text = getString(R.string.panel_status_no_text)
-                                busy = false
-                            } else {
-                                p.tvQuestion.text = MathText.render(text)
-                                busy = false
-                                askModel(text)
-                            }
-                        }
-                    },
-                    onFailure = { msg ->
-                        bitmap.recycle()
-                        handler.post {
-                            p.tvStatus.text = "识别失败：$msg"
-                            busy = false
-                        }
-                    }
-                )
+                val base64 = bitmapToJpegBase64(bitmap)
+                bitmap.recycle()
+                handler.post { startPipeline(base64) }
             }.start()
         }, CAPTURE_DELAY_MS)
     }
@@ -488,9 +453,60 @@ class FloatingService : Service() {
         return Base64.encodeToString(bytes.toByteArray(), Base64.NO_WRAP)
     }
 
-    /** 文本解答路径（DeepSeek）：传入本地 OCR 得到的题目文字。 */
+    // ---------------------------------------------------------------- 两段式流水线
+
+    /** 启动流水线：先校验两把 Key，再进入「千问读题 → DeepSeek 答题」。 */
+    private fun startPipeline(imageBase64: String) {
+        val qwenKey = Prefs.apiKey(this, Prefs.PROVIDER_QWEN)
+        val dsKey = Prefs.apiKey(this, Prefs.PROVIDER_DEEPSEEK)
+        if (qwenKey.isBlank() || dsKey.isBlank()) {
+            panel?.tvStatus?.text = getString(R.string.status_need_key)
+            busy = false
+            return
+        }
+        panel?.tvStatus?.text = getString(R.string.panel_status_reading)
+        panel?.tvQuestion?.text = getString(R.string.panel_question_reading)
+        busy = false
+        readQuestion(imageBase64)
+    }
+
+    /** 第一段：千问视觉读题，把截图转成题目文字（含 LaTeX）。 */
+    private fun readQuestion(imageBase64: String) {
+        val key = Prefs.apiKey(this, Prefs.PROVIDER_QWEN)
+        val c = ChatClient(key, Prefs.MODEL_QWEN_VISION, ChatClient.QWEN_URL)
+        client = c
+
+        val sb = StringBuilder()
+        Thread {
+            c.streamImage(
+                imageBase64 = imageBase64,
+                onDelta = { delta ->
+                    sb.append(delta)
+                    handler.post { panel?.tvQuestion?.text = sb.toString() }
+                },
+                onDone = {
+                    handler.post {
+                        val question = sb.toString().trim()
+                        if (question.isEmpty()) {
+                            panel?.tvStatus?.text = getString(R.string.panel_status_no_text)
+                        } else {
+                            panel?.tvQuestion?.text = MathText.render(question)
+                            askModel(question)
+                        }
+                    }
+                },
+                onError = { msg ->
+                    handler.post {
+                        panel?.tvStatus?.text = getString(R.string.panel_status_error) + msg
+                    }
+                }
+            )
+        }.start()
+    }
+
+    /** 第二段：DeepSeek 答题，把读题结果交给所选文本模型并流式渲染。 */
     private fun askModel(question: String) {
-        val key = Prefs.apiKeyForModel(this)
+        val key = Prefs.apiKey(this, Prefs.PROVIDER_DEEPSEEK)
         if (key.isBlank()) {
             panel?.tvStatus?.text = getString(R.string.status_need_key)
             return
@@ -505,32 +521,6 @@ class FloatingService : Service() {
         Thread {
             c.stream(
                 question = question,
-                onDelta = { delta -> handleDelta(delta) },
-                onDone = { handler.post { finishStream() } },
-                onError = { msg ->
-                    handler.post { panel?.tvStatus?.text = getString(R.string.panel_status_error) + msg }
-                }
-            )
-        }.start()
-    }
-
-    /** 视觉解答路径（千问）：传入截图的 JPEG base64，由多模态模型直接读题作答。 */
-    private fun askVision(imageBase64: String) {
-        val key = Prefs.apiKeyForModel(this)
-        if (key.isBlank()) {
-            panel?.tvStatus?.text = getString(R.string.status_need_key)
-            return
-        }
-        panel?.tvStatus?.text = getString(R.string.panel_status_asking)
-        answerBuffer.setLength(0)
-        renderAnswer("")
-
-        val model = Prefs.model(this)
-        val c = ChatClient(key, model, ChatClient.endpointFor(model))
-        client = c
-        Thread {
-            c.streamImage(
-                imageBase64 = imageBase64,
                 onDelta = { delta -> handleDelta(delta) },
                 onDone = { handler.post { finishStream() } },
                 onError = { msg ->
@@ -566,8 +556,6 @@ class FloatingService : Service() {
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         cancelStream()
-        ocr?.close()
-        ocr = null
         capture?.release()
         capture = null
         projection?.stop()

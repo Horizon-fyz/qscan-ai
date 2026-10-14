@@ -3,9 +3,12 @@ package com.quickanswer.app
 import android.content.Context
 
 /**
- * 本地配置：API Key 与模型选择，仅保存在本机 SharedPreferences。
- * Key 按「服务提供商」分别存储：DeepSeek（文本，本地 OCR 后提问）与
- * 千问（视觉，截图直传多模态模型）。模型名以 qwen 开头即视为千问提供商。
+ * 本地配置：API Key 与答题模型选择，仅保存在本机 SharedPreferences。
+ *
+ * 两段式流水线各用一把 Key：
+ *  - 千问（[PROVIDER_QWEN]）：视觉读题，截图转文字；
+ *  - DeepSeek（[PROVIDER_DEEPSEEK]）：文本答题。
+ * 两把 Key 分别持久化，互不覆盖。
  */
 object Prefs {
     private const val FILE = "quickanswer_prefs"
@@ -22,9 +25,6 @@ object Prefs {
     fun providerOf(model: String): String =
         if (model.startsWith("qwen")) PROVIDER_QWEN else PROVIDER_DEEPSEEK
 
-    /** 该提供商是否为「视觉直传」模式（跳过本地 OCR，截图直接交给多模态模型）。 */
-    fun isVision(provider: String): Boolean = provider == PROVIDER_QWEN
-
     // ---------------------------------------------------------------- API Key
 
     private fun apiKeyField(provider: String): String =
@@ -38,9 +38,6 @@ object Prefs {
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
             .edit().putString(apiKeyField(provider), value.trim()).apply()
     }
-
-    /** 当前所选模型对应的 Key（供悬浮窗服务使用）。 */
-    fun apiKeyForModel(context: Context): String = apiKey(context, providerOf(model(context)))
 
     // ---------------------------------------------------------------- 模型
 
@@ -56,6 +53,6 @@ object Prefs {
     const val MODEL_CHAT = "deepseek-chat"
     const val MODEL_REASONER = "deepseek-reasoner"
 
-    /** 百炼（DashScope）视觉模型：可用 qwen3.7-plus / qwen3.8-max / qwen3.8-flash 等，按需替换。 */
-    const val MODEL_QWEN_VL = "qwen3.7-plus"
+    /** 读题固定使用的百炼（DashScope）视觉模型；如 qwen3.7-plus / qwen3-vl-plus 等。 */
+    const val MODEL_QWEN_VISION = "qwen3.7-plus"
 }
