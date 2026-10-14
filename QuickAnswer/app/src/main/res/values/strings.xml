@@ -3,10 +3,10 @@
     <string name="app_name">答题助手</string>
     <string name="eyebrow">AI 答题助手</string>
     <string name="subtitle">截屏识别题目 · AI 智能解答</string>
-    <string name="footer">截屏会先发送给千问视觉模型读题，再交由 DeepSeek 解答；两把 Key 仅保存在本机。</string>
+    <string name="footer">解题模式：截屏先交千问视觉读题，再交 DeepSeek 解答；日常模式：截屏连同你的需求直接交千问给出指引。两把 Key 仅保存在本机。</string>
 
     <string name="usage_title">使用说明</string>
-    <string name="usage_body">1. 分别填写「千问视觉 Key」与「DeepSeek Key」：千问负责读题（截图转文字），DeepSeek 负责思考作答。\n2. 选择答题模型：deepseek-chat / deepseek-reasoner。\n3. 依次授予悬浮窗、通知权限。\n4. 点击「启动悬浮窗」，在系统弹窗中允许「屏幕录制/投屏」。\n5. 回到任意页面，点击屏幕上的悬浮球「答」，即可自动截屏并解答。\n\n提示：截屏瞬间悬浮球会自动隐藏，避免遮挡题目；答案为完整 LaTeX 渲染。</string>
+    <string name="usage_body">1. 分别填写「千问视觉 Key」与「DeepSeek Key」：千问负责读题与日常指引，DeepSeek 负责解题作答。\n2. 选择默认模式：解题模式（重点解题）/ 日常模式（重点指引操作、读取事实）。\n3. 选择答题模型：deepseek-chat / deepseek-reasoner。\n4. 依次授予悬浮窗、通知、录音权限（录音用于日常模式的语音输入）。\n5. 点击「启动悬浮窗」，在系统弹窗中允许「屏幕录制/投屏」。\n6. 点击悬浮球：解题模式自动截屏解答；日常模式打开面板，输入或说出需求后发送。\n\n提示：面板顶部可在「解题 / 日常」之间实时切换；答案为完整 LaTeX 渲染。</string>
 
     <string name="config_title">模型与密钥</string>
     <string name="api_key_qwen_title">千问视觉 Key（读题）</string>
@@ -18,6 +18,11 @@
     <string name="model_chat">deepseek-chat</string>
     <string name="model_reasoner">deepseek-reasoner</string>
 
+    <string name="mode_title">默认模式</string>
+    <string name="mode_solve">解题模式</string>
+    <string name="mode_daily">日常模式</string>
+    <string name="mode_note">解题模式：重点解题；日常模式：重点指引操作或读取事实，支持语音/文字需求。</string>
+
     <string name="step_overlay">1. 授予悬浮窗权限</string>
     <string name="step_notify">2. 授予通知权限</string>
     <string name="step_start">3. 启动悬浮窗</string>
@@ -25,6 +30,7 @@
 
     <string name="status_idle">填写信息后即可启动。</string>
     <string name="status_need_key">请先分别填写千问视觉 Key 与 DeepSeek Key。</string>
+    <string name="status_need_qwen_key">请先填写千问视觉 Key。</string>
     <string name="status_need_overlay">请先授予悬浮窗权限。</string>
     <string name="status_started">悬浮窗已启动，回到任意页面点击悬浮球即可。</string>
     <string name="status_stopped">悬浮窗已停止。</string>
@@ -34,22 +40,34 @@
     <string name="notif_text">点击悬浮球即可截屏识别题目</string>
 
     <string name="ball_text">答</string>
+    <string name="ball_text_daily">指</string>
 
     <string name="panel_title">解答</string>
+    <string name="panel_title_daily">日常助手</string>
     <string name="panel_status_idle">点击悬浮球开始</string>
+    <string name="panel_status_idle_daily">输入需求或点「语音」，再发送</string>
     <string name="panel_question_label">题目识别</string>
     <string name="panel_answer_label">答案输出</string>
+    <string name="panel_answer_label_daily">指引输出</string>
     <string name="panel_question_empty">—</string>
     <string name="panel_question_reading">千问视觉读题中…</string>
     <string name="panel_answer_empty">等待解答…</string>
     <string name="btn_copy">复制</string>
     <string name="btn_reread">重识别</string>
+    <string name="btn_send">发送</string>
+    <string name="btn_voice">语音</string>
+    <string name="btn_voice_listening">聆听中…</string>
+    <string name="et_request_hint">说出你的需求（可留空）</string>
 
     <string name="panel_status_capturing">正在截屏…</string>
     <string name="panel_status_reading">千问视觉正在读题…</string>
     <string name="panel_status_asking">DeepSeek 正在解答…</string>
+    <string name="panel_status_daily">千问正在生成指引…</string>
     <string name="panel_status_no_text">未识别到文字，请调整后重试。</string>
     <string name="panel_status_capture_fail">截屏失败，请重新启动悬浮窗。</string>
     <string name="panel_status_error">请求失败：</string>
     <string name="panel_status_copied">已复制到剪贴板</string>
+    <string name="mic_denied">未授予录音权限，可改用文字输入。</string>
+    <string name="mic_unavailable">当前设备不支持语音识别。</string>
+    <string name="mic_error">语音识别失败，请重试或改用文字输入。</string>
 </resources>

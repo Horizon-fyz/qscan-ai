@@ -41,6 +41,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 录音权限仅用于日常模式的语音输入；拒绝不阻塞启动，只是语音不可用。
+    private val micLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { launchProjection() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -56,6 +61,10 @@ class MainActivity : AppCompatActivity() {
 
         binding.segChat.setOnClickListener { selectModel(Prefs.MODEL_CHAT) }
         binding.segReasoner.setOnClickListener { selectModel(Prefs.MODEL_REASONER) }
+
+        selectMode(Prefs.mode(this))
+        binding.segModeSolve.setOnClickListener { selectMode(Prefs.MODE_SOLVE) }
+        binding.segModeDaily.setOnClickListener { selectMode(Prefs.MODE_DAILY) }
 
         binding.btnOverlay.setOnClickListener { requestOverlayPermission() }
         binding.btnNotify.setOnClickListener { requestNotificationPermission() }
@@ -79,6 +88,12 @@ class MainActivity : AppCompatActivity() {
         Prefs.setModel(this, model)
         styleSeg(binding.segChat, model == Prefs.MODEL_CHAT)
         styleSeg(binding.segReasoner, model == Prefs.MODEL_REASONER)
+    }
+
+    private fun selectMode(mode: String) {
+        Prefs.setMode(this, mode)
+        styleSeg(binding.segModeSolve, mode == Prefs.MODE_SOLVE)
+        styleSeg(binding.segModeDaily, mode == Prefs.MODE_DAILY)
     }
 
     private fun styleSeg(view: TextView, selected: Boolean) {
@@ -133,6 +148,17 @@ class MainActivity : AppCompatActivity() {
             return
         }
         saveKeys()
+        // 首次进入时申请录音权限（用于日常模式语音输入），授权后再拉起投屏。
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            launchProjection()
+        } else {
+            micLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
+    private fun launchProjection() {
         val mpm = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         projectionLauncher.launch(mpm.createScreenCaptureIntent())
     }

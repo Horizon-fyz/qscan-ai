@@ -12,7 +12,8 @@ import java.net.URL
  *
  * 两段式流水线：
  *  - [streamImage] 视觉读题（千问 / Qwen-VL：截图转 base64，只抽取题目文字，含 LaTeX）；
- *  - [stream]      文本答题（DeepSeek：把读题结果交给推理模型解答）。
+ *  - [stream]      文本答题（DeepSeek：把读题结果交给推理模型解答）；
+ *  - [streamImageAsk] 日常模式（千问 / Qwen-VL：截图 + 用户需求，直接给出操作指引或事实）。
  *
  * 端点由 [endpointFor] 依模型名解析，便于后续接入更多兼容 OpenAI 协议的服务。
  */
@@ -67,6 +68,34 @@ class ChatClient(
                 .put("content", JSONArray().put(imagePart).put(textPart))
         )
         // 读题属纯转写任务，无需思考链；关闭思考可显著降本提速。
+        post(messages, onDelta, onDone, onError, disableThinking = true)
+    }
+
+    /**
+     * 日常模式：把截图与（可选的）用户需求一起交给视觉模型，直接得到操作指引或事实结论。
+     * 不发送 system 角色，改为把指令并入 user 文本，兼容部分视觉模型的角色限制。
+     */
+    fun streamImageAsk(
+        imageBase64: String,
+        request: String,
+        onDelta: (String) -> Unit,
+        onDone: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val req = request.trim()
+        val instruction = if (req.isEmpty()) DAILY_PROMPT else DAILY_PROMPT + "\n\n用户的需求：" + req
+
+        val imagePart = JSONObject()
+            .put("type", "image_url")
+            .put("image_url", JSONObject().put("url", "data:image/jpeg;base64,$imageBase64"))
+        val textPart = JSONObject().put("type", "text").put("text", instruction)
+
+        val messages = JSONArray().put(
+            JSONObject()
+                .put("role", "user")
+                .put("content", JSONArray().put(imagePart).put(textPart))
+        )
+        // 指引需要即时呈现，关闭思考链以求直接、快速。
         post(messages, onDelta, onDone, onError, disableThinking = true)
     }
 
@@ -168,5 +197,21 @@ class ChatClient(
                 "一律使用标准 LaTeX 表示：行内用 \$...\$，独立成行的公式用 \$\$...\$\$；\n" +
                 "4) 若截图中有多道题，按先后顺序全部转写，用空行分隔；\n" +
                 "5) 只输出题目文字，不要任何前言、后缀或解释性语句。"
+
+        /**
+         * 日常模式提示词：结合屏幕截图与用户需求，给出可直接照做的操作指引或事实结论。
+         */
+        private const val DAILY_PROMPT =
+            "你是一个手机操作助手。用户会发来一张手机屏幕截图，可能附带一句文字需求（如未附带，则默认" +
+                "请用户说明当前屏幕）。请严格依据截图中真实可见的内容作答：\n" +
+                "1) 若用户提出了具体需求（如「怎么打开设置」「这个页面是做什么的」「这个提示什么意思」），" +
+                "就围绕该需求给出准确、可直接照做的结论或步骤；\n" +
+                "2) 若用户没有提出需求，则先说明当前是什么应用/页面、屏幕上有哪些主要可操作项，" +
+                "再给出下一步建议；\n" +
+                "3) 涉及多点操作时，按「第 1 步、第 2 步…」分点列出，明确按钮/菜单的名称与位置" +
+                "（如「右下角蓝色的＋」「右上角三个点」）；\n" +
+                "4) 只依据截图中确实可见的内容作答，看不清或不存在的内容不要臆测，可如实说明「截图中未见」；\n" +
+                "5) 若用户问的是某个事实或含义，直接给出准确结论，无需罗列操作。\n" +
+                "回答使用中文，简洁、具体、面向操作。" + LATEX_RULE
     }
 }

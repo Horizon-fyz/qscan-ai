@@ -3,11 +3,11 @@ package com.quickanswer.app
 import android.content.Context
 
 /**
- * 本地配置：API Key 与答题模型选择，仅保存在本机 SharedPreferences。
+ * 本地配置：API Key、答题模型与工作模式，仅保存在本机 SharedPreferences。
  *
  * 两段式流水线各用一把 Key：
- *  - 千问（[PROVIDER_QWEN]）：视觉读题，截图转文字；
- *  - DeepSeek（[PROVIDER_DEEPSEEK]）：文本答题。
+ *  - 千问（[PROVIDER_QWEN]）：视觉读题 / 日常模式直接生成指引；
+ *  - DeepSeek（[PROVIDER_DEEPSEEK]）：解题模式下的文本答题。
  * 两把 Key 分别持久化，互不覆盖。
  */
 object Prefs {
@@ -15,6 +15,7 @@ object Prefs {
     private const val KEY_API_DEEPSEEK = "api_key_deepseek"
     private const val KEY_API_QWEN = "api_key_qwen"
     private const val KEY_MODEL = "model"
+    private const val KEY_MODE = "mode"
 
     // ---------------------------------------------------------------- 提供商
 
@@ -52,6 +53,23 @@ object Prefs {
 
     const val MODEL_CHAT = "deepseek-chat"
     const val MODEL_REASONER = "deepseek-reasoner"
+
+    // ---------------------------------------------------------------- 工作模式
+
+    /** 解题模式：截图 → 千问读题 → DeepSeek 解题。 */
+    const val MODE_SOLVE = "solve"
+
+    /** 日常模式：截图 +（可选的）用户需求 → 千问直接给出操作指引或事实。 */
+    const val MODE_DAILY = "daily"
+
+    fun mode(context: Context): String =
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .getString(KEY_MODE, MODE_SOLVE).orEmpty()
+
+    fun setMode(context: Context, value: String) {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .edit().putString(KEY_MODE, value).apply()
+    }
 
     /** 读题固定使用的百炼（DashScope）视觉模型；如 qwen3.7-plus / qwen3-vl-plus 等。 */
     const val MODEL_QWEN_VISION = "qwen3.7-plus"
