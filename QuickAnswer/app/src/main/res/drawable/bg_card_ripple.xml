@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 可点入口卡片：card-base 外观 + 圆角内裁剪的触碰反馈 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/hairline_strong">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/canvas" />
+            <corners android:radius="@dimen/radius_lg" />
+        </shape>
+    </item>
+    <item android:drawable="@drawable/bg_card" />
+</ripple>

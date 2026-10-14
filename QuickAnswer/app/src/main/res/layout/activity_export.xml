@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 导出宿主：整页透明，仅承载「格式选择/结果」对话框，以及一个离屏 WebView 用于渲染答案。
+     webHost 以 alpha=0 保持可见但不显示，确保 WebView 正常布局与绘制（长图/PDF 需要测量高度）。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <LinearLayout
+        android:id="@+id/webHost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0"
+        android:orientation="vertical" />
+</FrameLayout>

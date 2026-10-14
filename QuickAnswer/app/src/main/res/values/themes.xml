@@ -14,6 +14,16 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
     </style>
 
+    <!-- 导出选择器：完全透明的浮层宿主，仅承载对话框与后台 WebView 渲染 -->
+    <style name="Theme.QuickAnswer.Transparent" parent="Theme.QuickAnswer">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
     <!-- ===== 文字层级（对应 DESIGN.md typography） ===== -->
 
     <!-- micro-uppercase：深蓝 hero 上的浅紫眉标 -->
@@ -119,5 +129,21 @@
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:minHeight">@dimen/control_height</item>
+    </style>
+
+    <!-- 答案区右上角小操作 chip：ghost 底、12sp、紧凑（复制 / 分享） -->
+    <style name="Chip.Action" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">26dp</item>
+        <item name="android:minWidth">44dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/bg_button_tertiary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/slate</item>
+        <item name="android:paddingStart">@dimen/space_xs</item>
+        <item name="android:paddingEnd">@dimen/space_xs</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
     </style>
 </resources>

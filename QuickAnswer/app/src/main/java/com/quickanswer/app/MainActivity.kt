@@ -3,17 +3,18 @@ package com.quickanswer.app
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.projection.MediaProjectionConfig
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.quickanswer.app.databinding.ActivityMainBinding
 
+/** 首页：只做两件事——打开「密钥设置 / 使用说明」入口，以及启动与停止悬浮窗。 */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -23,7 +24,6 @@ class MainActivity : AppCompatActivity() {
     ) { result ->
         val data = result.data
         if (result.resultCode == RESULT_OK && data != null) {
-            saveKeys()
             FloatingService.start(this, result.resultCode, data)
             binding.tvStatus.text = getString(R.string.status_started)
         } else {
@@ -51,20 +51,15 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.etQwenKey.setText(Prefs.apiKey(this, Prefs.PROVIDER_QWEN))
-        binding.etDsKey.setText(Prefs.apiKey(this, Prefs.PROVIDER_DEEPSEEK))
-
-        // 旧版本可能残留「千问视觉」等非答题模型，回落到默认文本模型
-        val saved = Prefs.model(this)
-        val answerModel = if (saved == Prefs.MODEL_REASONER) Prefs.MODEL_REASONER else Prefs.MODEL_CHAT
-        selectModel(answerModel)
-
-        binding.segChat.setOnClickListener { selectModel(Prefs.MODEL_CHAT) }
-        binding.segReasoner.setOnClickListener { selectModel(Prefs.MODEL_REASONER) }
-
-        selectMode(Prefs.mode(this))
-        binding.segModeSolve.setOnClickListener { selectMode(Prefs.MODE_SOLVE) }
-        binding.segModeDaily.setOnClickListener { selectMode(Prefs.MODE_DAILY) }
+        binding.cardKeys.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+        binding.cardHelp.setOnClickListener {
+            startActivity(Intent(this, HelpActivity::class.java))
+        }
+        binding.cardFiles.setOnClickListener {
+            startActivity(Intent(this, FileManagerActivity::class.java))
+        }
 
         binding.btnOverlay.setOnClickListener { requestOverlayPermission() }
         binding.btnNotify.setOnClickListener { requestNotificationPermission() }
@@ -82,30 +77,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             getString(R.string.step_overlay)
         }
-    }
-
-    private fun selectModel(model: String) {
-        Prefs.setModel(this, model)
-        styleSeg(binding.segChat, model == Prefs.MODEL_CHAT)
-        styleSeg(binding.segReasoner, model == Prefs.MODEL_REASONER)
-    }
-
-    private fun selectMode(mode: String) {
-        Prefs.setMode(this, mode)
-        styleSeg(binding.segModeSolve, mode == Prefs.MODE_SOLVE)
-        styleSeg(binding.segModeDaily, mode == Prefs.MODE_DAILY)
-    }
-
-    private fun styleSeg(view: TextView, selected: Boolean) {
-        view.setBackgroundResource(
-            if (selected) R.drawable.bg_segment_selected else R.drawable.bg_segment_default
-        )
-        view.setTextColor(ContextCompat.getColor(this, if (selected) R.color.on_dark else R.color.steel))
-    }
-
-    private fun saveKeys() {
-        Prefs.setApiKey(this, Prefs.PROVIDER_QWEN, binding.etQwenKey.text.toString())
-        Prefs.setApiKey(this, Prefs.PROVIDER_DEEPSEEK, binding.etDsKey.text.toString())
     }
 
     private fun requestOverlayPermission() {
@@ -136,8 +107,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startFloating() {
-        if (binding.etQwenKey.text.toString().trim().isEmpty() ||
-            binding.etDsKey.text.toString().trim().isEmpty()
+        // 密钥已在「密钥设置」页保存到本机，这里直接读取校验收否填写。
+        if (Prefs.apiKey(this, Prefs.PROVIDER_QWEN).isBlank() ||
+            Prefs.apiKey(this, Prefs.PROVIDER_DEEPSEEK).isBlank()
         ) {
             binding.tvStatus.text = getString(R.string.status_need_key)
             return
@@ -147,7 +119,6 @@ class MainActivity : AppCompatActivity() {
             requestOverlayPermission()
             return
         }
-        saveKeys()
         // 首次进入时申请录音权限（用于日常模式语音输入），授权后再拉起投屏。
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
             == PackageManager.PERMISSION_GRANTED
@@ -160,6 +131,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun launchProjection() {
         val mpm = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        projectionLauncher.launch(mpm.createScreenCaptureIntent())
+        // Android 14+ 默认弹窗会让用户选「整个屏幕 / 单个应用」，强制只提供整屏捕获。
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            mpm.createScreenCaptureIntent(MediaProjectionConfig.createConfigForDefaultDisplay())
+        } else {
+            mpm.createScreenCaptureIntent()
+        }
+        projectionLauncher.launch(intent)
     }
 }

@@ -85,7 +85,8 @@ class ChatClient(
     }
 
     /**
-     * 日常模式：把截图与（可选的）用户需求一起交给视觉模型，直接得到操作指引或事实结论。
+     * 日常 / 实时模式：把截图与（可选的）用户需求一起交给视觉模型，直接得到操作指引或事实结论。
+     * [prompt] 默认使用日常提示词；实时模式传入 [REALTIME_PROMPT] 以输出更简短的即时回答。
      * 不发送 system 角色，改为把指令并入 user 文本，兼容部分视觉模型的角色限制。
      */
     fun streamImageAsk(
@@ -93,10 +94,11 @@ class ChatClient(
         request: String,
         onDelta: (String) -> Unit,
         onDone: () -> Unit,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
+        prompt: String = DAILY_PROMPT
     ) {
         val req = request.trim()
-        val instruction = if (req.isEmpty()) DAILY_PROMPT else DAILY_PROMPT + "\n\n用户的需求：" + req
+        val instruction = if (req.isEmpty()) prompt else prompt + "\n\n用户的需求：" + req
 
         val imagePart = JSONObject()
             .put("type", "image_url")
@@ -229,5 +231,20 @@ class ChatClient(
                 "4) 只依据截图中确实可见的内容作答，看不清或不存在的内容不要臆测，可如实说明「截图中未见」；\n" +
                 "5) 若用户问的是某个事实或含义，直接给出准确结论，无需罗列操作。\n" +
                 "回答使用中文，简洁、具体、面向操作。" + LATEX_RULE
+
+        /**
+         * 实时模式提示词：持续观察屏幕，每当屏幕内容变化时给出简短、即时的结论或下一步提示。
+         * 强调「只讲当前这一刻屏幕上的关键信息」，避免长篇复述，适配高频刷新。
+         */
+        const val REALTIME_PROMPT =
+            "你是一个实时屏幕助手。你会持续看到用户手机屏幕的当前画面（每张都是最新一帧），" +
+                "可能附带一句常驻文字需求。请严格依据这一帧截图中真实可见的内容，给出简短、即时的回答：\n" +
+                "1) 先用一句话说明当前屏幕是什么应用/页面或正在发生什么；\n" +
+                "2) 再针对用户需求（若有）给出最关键的一两步结论或操作提示；若没有需求，" +
+                "则直接给出此刻最值得注意的信息或下一步建议；\n" +
+                "3) 只依据本帧可见内容，不要臆测、不要复述历史、不要长篇大论，" +
+                "整体控制在 3 行以内，便于快速扫读；\n" +
+                "4) 若画面与上一帧相比没有关键变化，只需一句简短总结即可。\n" +
+                "回答使用中文，简洁、具体。" + LATEX_RULE
     }
 }

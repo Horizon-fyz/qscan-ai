@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 主界面（基准 notion/DESIGN.md）：
-     深蓝 hero band(brand-navy) 头图 + 浅灰 surface 页底 + 白色 card-base 卡片 +
-     单一紫色主导 CTA(button-primary) + pill-tab 模型切换 + 深蓝底浅紫眉标 -->
+<!-- 首页（基准 notion/DESIGN.md）：只承担「导航入口 + 启动控制」两件事，
+     密钥/模型/模式与使用说明各自独立成页，避免一屏冗杂。 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -54,29 +53,132 @@
             android:orientation="vertical"
             android:padding="@dimen/space_lg">
 
-            <!-- 使用说明卡（card-base） -->
+            <!-- 入口：密钥设置 -->
             <LinearLayout
+                android:id="@+id/cardKeys"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
+                android:background="@drawable/bg_card_ripple"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:padding="@dimen/space_xl">
 
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Tv.SectionTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/entry_keys_title" />
+
+                    <TextView
+                        style="@style/Tv.BodySm"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xxs"
+                        android:text="@string/entry_keys_desc" />
+                </LinearLayout>
+
                 <TextView
-                    style="@style/Tv.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/usage_title" />
-
-                <TextView
-                    style="@style/Tv.BodySm"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_sm"
-                    android:text="@string/usage_body" />
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:text="›"
+                    android:textColor="@color/stone"
+                    android:textSize="22sp" />
             </LinearLayout>
 
-            <!-- 配置卡（card-base） -->
+            <!-- 入口：使用说明 -->
+            <LinearLayout
+                android:id="@+id/cardHelp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:background="@drawable/bg_card_ripple"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/space_xl">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Tv.SectionTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/entry_help_title" />
+
+                    <TextView
+                        style="@style/Tv.BodySm"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xxs"
+                        android:text="@string/entry_help_desc" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:text="›"
+                    android:textColor="@color/stone"
+                    android:textSize="22sp" />
+            </LinearLayout>
+
+            <!-- 入口：文件管理 -->
+            <LinearLayout
+                android:id="@+id/cardFiles"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:background="@drawable/bg_card_ripple"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/space_xl">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Tv.SectionTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/entry_files_title" />
+
+                    <TextView
+                        style="@style/Tv.BodySm"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xxs"
+                        android:text="@string/entry_files_desc" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:text="›"
+                    android:textColor="@color/stone"
+                    android:textSize="22sp" />
+            </LinearLayout>
+
+            <!-- 启动控制卡（card-base） -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -89,176 +191,7 @@
                     style="@style/Tv.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/config_title" />
-
-                <TextView
-                    style="@style/Tv.Label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg"
-                    android:text="@string/api_key_qwen_title" />
-
-                <EditText
-                    android:id="@+id/etQwenKey"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/control_height"
-                    android:layout_marginTop="@dimen/space_xs"
-                    android:background="@drawable/bg_input"
-                    android:fontFamily="sans-serif"
-                    android:hint="@string/api_key_hint"
-                    android:inputType="textVisiblePassword"
-                    android:paddingStart="@dimen/space_md"
-                    android:paddingEnd="@dimen/space_md"
-                    android:singleLine="true"
-                    android:textColor="@color/ink"
-                    android:textColorHint="@color/muted"
-                    android:textSize="16sp" />
-
-                <TextView
-                    style="@style/Tv.Caption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_xs"
-                    android:text="@string/api_key_note_qwen" />
-
-                <TextView
-                    style="@style/Tv.Label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg"
-                    android:text="@string/api_key_ds_title" />
-
-                <EditText
-                    android:id="@+id/etDsKey"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/control_height"
-                    android:layout_marginTop="@dimen/space_xs"
-                    android:background="@drawable/bg_input"
-                    android:fontFamily="sans-serif"
-                    android:hint="@string/api_key_hint"
-                    android:inputType="textVisiblePassword"
-                    android:paddingStart="@dimen/space_md"
-                    android:paddingEnd="@dimen/space_md"
-                    android:singleLine="true"
-                    android:textColor="@color/ink"
-                    android:textColorHint="@color/muted"
-                    android:textSize="16sp" />
-
-                <TextView
-                    style="@style/Tv.Caption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_xs"
-                    android:text="@string/api_key_note" />
-
-                <TextView
-                    style="@style/Tv.Label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg"
-                    android:text="@string/model_title" />
-
-                <!-- 答题模型切换：pill-tab（选中 = ink-deep 实底白字，未选中 = 透明 + hairline 描边） -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_xs"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/segChat"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/control_height"
-                        android:layout_weight="1"
-                        android:autoSizeMaxTextSize="14sp"
-                        android:autoSizeMinTextSize="10sp"
-                        android:autoSizeStepGranularity="1sp"
-                        android:autoSizeTextType="uniform"
-                        android:background="@drawable/bg_segment_selected"
-                        android:fontFamily="sans-serif-medium"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:text="@string/model_chat"
-                        android:textColor="@color/on_dark"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/segReasoner"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/control_height"
-                        android:layout_marginStart="@dimen/space_xs"
-                        android:layout_weight="1"
-                        android:autoSizeMaxTextSize="14sp"
-                        android:autoSizeMinTextSize="10sp"
-                        android:autoSizeStepGranularity="1sp"
-                        android:autoSizeTextType="uniform"
-                        android:background="@drawable/bg_segment_default"
-                        android:fontFamily="sans-serif-medium"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:text="@string/model_reasoner"
-                        android:textColor="@color/steel"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <TextView
-                    style="@style/Tv.Label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg"
-                    android:text="@string/mode_title" />
-
-                <!-- 默认模式：pill-tab（解题 / 日常）；面板内仍可实时切换 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_xs"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/segModeSolve"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/control_height"
-                        android:layout_weight="1"
-                        android:autoSizeMaxTextSize="14sp"
-                        android:autoSizeMinTextSize="10sp"
-                        android:autoSizeStepGranularity="1sp"
-                        android:autoSizeTextType="uniform"
-                        android:background="@drawable/bg_segment_selected"
-                        android:fontFamily="sans-serif-medium"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:text="@string/mode_solve"
-                        android:textColor="@color/on_dark"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/segModeDaily"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/control_height"
-                        android:layout_marginStart="@dimen/space_xs"
-                        android:layout_weight="1"
-                        android:autoSizeMaxTextSize="14sp"
-                        android:autoSizeMinTextSize="10sp"
-                        android:autoSizeStepGranularity="1sp"
-                        android:autoSizeTextType="uniform"
-                        android:background="@drawable/bg_segment_default"
-                        android:fontFamily="sans-serif-medium"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:text="@string/mode_daily"
-                        android:textColor="@color/steel"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <TextView
-                    style="@style/Tv.Caption"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_xs"
-                    android:text="@string/mode_note" />
+                    android:text="@string/launch_title" />
 
                 <Button
                     android:id="@+id/btnOverlay"
@@ -267,6 +200,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_lg"
                     android:text="@string/step_overlay" />
+
                 <Button
                     android:id="@+id/btnNotify"
                     style="@style/Btn.Secondary"
@@ -300,15 +234,6 @@
                     android:layout_marginTop="@dimen/space_md"
                     android:text="@string/status_idle" />
             </LinearLayout>
-
-            <TextView
-                style="@style/Tv.Caption"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_lg"
-                android:layout_marginBottom="@dimen/space_lg"
-                android:gravity="center"
-                android:text="@string/footer" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

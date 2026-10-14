@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 文件多选上下文菜单（长按条目进入选择模式后出现） -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_open"
+        android:title="@string/fm_open"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_share"
+        android:title="@string/fm_share"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_rename"
+        android:title="@string/fm_rename"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_copy"
+        android:title="@string/fm_copy"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_cut"
+        android:title="@string/fm_cut"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_delete"
+        android:title="@string/fm_delete"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_select_all"
+        android:title="@string/fm_select_all"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_properties"
+        android:title="@string/fm_properties"
+        app:showAsAction="never" />
+</menu>

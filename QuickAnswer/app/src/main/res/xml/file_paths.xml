@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FileProvider 可共享路径：覆盖应用私有目录与公共外部存储（文件管理器需分享任意位置的文件）。 -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path name="files" path="." />
+    <cache-path name="cache" path="." />
+    <external-files-path name="ext_files" path="." />
+    <external-cache-path name="ext_cache" path="." />
+    <external-path name="external" path="." />
+    <root-path name="root" path="." />
+</paths>

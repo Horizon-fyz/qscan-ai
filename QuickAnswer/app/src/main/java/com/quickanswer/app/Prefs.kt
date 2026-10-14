@@ -65,6 +65,9 @@ object Prefs {
     /** 日常模式：截图 +（可选的）用户需求 → 千问直接给出操作指引或事实。 */
     const val MODE_DAILY = "daily"
 
+    /** 实时模式：持续截屏观察屏幕，检测到变化即交千问即时回答；支持语音/文字需求。 */
+    const val MODE_REALTIME = "realtime"
+
     fun mode(context: Context): String =
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
             .getString(KEY_MODE, MODE_SOLVE).orEmpty()

@@ -14,7 +14,9 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.graphics.Rect
@@ -28,6 +30,8 @@ import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Base64
 import android.util.Log
 import android.view.Gravity
@@ -51,13 +55,16 @@ import java.io.ByteArrayOutputStream
 import kotlin.math.abs
 
 /**
- * 悬浮窗前台服务，支持两种工作模式（面板内可实时切换）：
+ * 悬浮窗前台服务，支持三种工作模式（面板内可实时切换）：
  *
  *  - 解题模式：悬浮球 → 截屏(MediaProjection) → ① 千问视觉读题（截图转文字，含 LaTeX）
  *    → ② DeepSeek 答题；
- *  - 日常模式：悬浮球 → 打开面板 →（文字/语音）说出需求 → 发送 → 隐藏悬浮层截屏
- *    → 千问视觉「看着屏幕」直接给出操作指引或事实结论。
+ *  - 日常模式：悬浮球 → 打开面板 →（文字/语音）说出需求 → 发送 → 截屏
+ *    → 千问视觉「看着屏幕」直接给出操作指引或事实结论；
+ *  - 实时模式：打开面板即持续观察屏幕，画面有变化就把最新一帧交千问即时回答，
+ *    支持常驻的文字/语音需求。
  *
+ * 截屏时面板保持可见，改由对悬浮层区域涂白遮罩来避免截到自身，因此不再闪屏。
  * 答案为内嵌 KaTeX 的 WebView 渲染（完整支持 LaTeX），题目区用 MathText 轻量渲染。
  */
 class FloatingService : Service() {
@@ -86,6 +93,12 @@ class FloatingService : Service() {
     private val stitchSlices = mutableListOf<String>()
     private var stitcher: ScrollStitcher? = null
     private val stitchTick = Runnable { grabForStitch() }
+
+    /** 实时模式：循环观察屏幕，检测到画面变化才请求，避免无效调用。 */
+    private var realtimeActive = false
+    private var realtimeBusy = false
+    private var lastFingerprint: IntArray? = null
+    private val realtimeTick = Runnable { realtimeGrab() }
 
     /** 答案原文累积缓冲：流式增量先累积，再整体交给 WebView 渲染，保证公式跨 chunk 也能正确解析 */
     private val answerBuffer = StringBuilder()
@@ -287,17 +300,22 @@ class FloatingService : Service() {
         applyMode()
     }
 
-    /** 点击悬浮球：拼接中→结束拼接；解题模式直接截屏解答；日常模式先打开面板让用户输入需求。 */
+    /** 点击悬浮球：拼接中→结束拼接；解题模式直接截屏解答；日常/实时模式先打开面板。 */
     private fun onBallTap() {
         if (stitching) {
             stopStitch()
             return
         }
-        if (Prefs.mode(this) == Prefs.MODE_DAILY) {
-            showPanel()
-            panel?.tvStatus?.text = getString(R.string.panel_status_idle_daily)
-        } else {
-            doCapture()
+        when (Prefs.mode(this)) {
+            Prefs.MODE_DAILY -> {
+                showPanel()
+                panel?.tvStatus?.text = getString(R.string.panel_status_idle_daily)
+            }
+            Prefs.MODE_REALTIME -> {
+                showPanel()
+                startRealtime()
+            }
+            else -> doCapture()
         }
     }
 
@@ -404,10 +422,15 @@ class FloatingService : Service() {
 
         binding.btnClose.setOnClickListener {
             hideKeyboard()
-            panel?.root?.visibility = View.GONE
+            stopRealtime()
+            hidePanel()
         }
         binding.btnReread.setOnClickListener {
-            if (Prefs.mode(this) == Prefs.MODE_DAILY) sendDaily() else doCapture()
+            when (Prefs.mode(this)) {
+                Prefs.MODE_SOLVE -> doCapture()
+                Prefs.MODE_REALTIME -> toggleRealtime()
+                else -> sendDaily()
+            }
         }
         binding.btnStitch.setOnClickListener { startStitch() }
         binding.btnDailyShot.setOnClickListener { sendDailyShot() }
@@ -419,8 +442,36 @@ class FloatingService : Service() {
                 toast(getString(R.string.panel_status_copied))
             }
         }
+        // 分享/导出：走系统分享面板（可保存到文件、便签、聊天等），内容为答案原文
+        binding.btnShare.setOnClickListener {
+            val text = answerBuffer.toString()
+            if (text.isEmpty()) {
+                toast(getString(R.string.panel_status_share_empty))
+                return@setOnClickListener
+            }
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+            }
+            val chooser = Intent.createChooser(send, getString(R.string.btn_share)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            runCatching { startActivity(chooser) }
+                .onFailure { toast(getString(R.string.panel_status_error) + it.message) }
+        }
+        // 导出：把答案原文交给 ExportActivity，支持 Word/PDF/Markdown/文本/HTML/长图
+        binding.btnExport.setOnClickListener {
+            val text = answerBuffer.toString()
+            if (text.isEmpty()) {
+                toast(getString(R.string.export_empty))
+                return@setOnClickListener
+            }
+            hideKeyboard()
+            ExportActivity.launch(this, text, getString(R.string.export_default_title))
+        }
         binding.segSolve.setOnClickListener { setMode(Prefs.MODE_SOLVE) }
         binding.segDaily.setOnClickListener { setMode(Prefs.MODE_DAILY) }
+        binding.segRealtime.setOnClickListener { setMode(Prefs.MODE_REALTIME) }
         binding.btnVoice.setOnClickListener { toggleVoice() }
         binding.etRequest.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
@@ -428,6 +479,33 @@ class FloatingService : Service() {
                 true
             } else {
                 false
+            }
+        }
+        // 实时模式：需求文字/语音一旦变化，立即作废上一帧指纹，下一轮采集即按新需求重新回答
+        binding.etRequest.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                if (realtimeActive) lastFingerprint = null
+            }
+        })
+
+        // 手势兼容：面板平时「非获焦」以免抢系统的返回手势；用户点输入框时才临时转为
+        // 可获焦（软键盘需要），一旦失焦立即恢复「非获焦」，把返回手势交还底层应用。
+        binding.etRequest.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                setPanelFocusable(true)
+                v.postDelayed({ v.requestFocus() }, 80L)
+            }
+            false
+        }
+        binding.etRequest.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) {
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                v.postDelayed({ imm.showSoftInput(v, InputMethodManager.SHOW_IMPLICIT) }, 120L)
+            } else {
+                setPanelFocusable(false)
+                hideKeyboard()
             }
         }
 
@@ -524,6 +602,8 @@ class FloatingService : Service() {
         web.setBackgroundColor(Color.TRANSPARENT)
         web.isVerticalScrollBarEnabled = true
         web.settings.javaScriptEnabled = true
+        // 允许长按选中正文并调用系统复制菜单（配合顶部「复制」，覆盖片段/整段复制）
+        web.isLongClickable = true
         web.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 webReady = true
@@ -562,44 +642,104 @@ class FloatingService : Service() {
         renderAnswer(answerBuffer.toString())
     }
 
-    private fun showPanel() {
+    /** 打开大面板：显示面板并隐藏悬浮球（避免两层叠在一起、也缩小截屏需遮挡的面积）。 */
+    private fun showPanel(): FloatPanelBinding {
         val binding = ensurePanel()
         binding.root.visibility = View.VISIBLE
+        ball?.root?.visibility = View.GONE
+        return binding
+    }
+
+    /** 关闭面板：隐藏面板并恢复悬浮球。 */
+    private fun hidePanel() {
+        // 先清掉输入框焦点 → 触发失焦回调恢复「非获焦」，把返回手势交还系统
+        panel?.etRequest?.clearFocus()
+        panel?.root?.visibility = View.GONE
+        ball?.root?.visibility = View.VISIBLE
     }
 
     // ---------------------------------------------------------------- 模式
 
     /** 依当前模式刷新面板与悬浮球的文案、可见性与可获焦状态（切模式与建面板时调用）。 */
     private fun applyMode() {
-        val daily = Prefs.mode(this) == Prefs.MODE_DAILY
-        ball?.ball?.text = getString(if (daily) R.string.ball_text_daily else R.string.ball_text)
+        val mode = Prefs.mode(this)
+        val daily = mode == Prefs.MODE_DAILY
+        val realtime = mode == Prefs.MODE_REALTIME
+
+        ball?.ball?.text = getString(
+            when (mode) {
+                Prefs.MODE_DAILY -> R.string.ball_text_daily
+                Prefs.MODE_REALTIME -> R.string.ball_text_live
+                else -> R.string.ball_text
+            }
+        )
 
         val p = panel ?: return
-        p.zoneQuestion.visibility = if (daily) View.GONE else View.VISIBLE
-        p.dailyInputBar.visibility = if (daily) View.VISIBLE else View.GONE
-        p.btnStitch.visibility = if (daily) View.GONE else View.VISIBLE
-        if (!daily) {
+        // 解题模式：题目区 + 翻动拼接；日常/实时模式：需求输入行（文字/语音）
+        p.zoneQuestion.visibility = if (daily || realtime) View.GONE else View.VISIBLE
+        p.dailyInputBar.visibility = if (daily || realtime) View.VISIBLE else View.GONE
+        p.btnStitch.visibility = if (daily || realtime) View.GONE else View.VISIBLE
+        // 实时模式无需「截屏」：屏幕一有变化就会自动回答
+        p.btnDailyShot.visibility = if (realtime) View.GONE else View.VISIBLE
+        if (!daily && !realtime) {
             p.etRequest.setText("")
             p.etRequest.clearFocus()
         }
-        p.tvTitle.text = getString(if (daily) R.string.panel_title_daily else R.string.panel_title)
-        p.tvAnswerLabel.text =
-            getString(if (daily) R.string.panel_answer_label_daily else R.string.panel_answer_label)
-        p.btnReread.text = getString(if (daily) R.string.btn_send else R.string.btn_reread)
-        styleSeg(p.segSolve, !daily)
+        p.tvTitle.text = getString(
+            when (mode) {
+                Prefs.MODE_DAILY -> R.string.panel_title_daily
+                Prefs.MODE_REALTIME -> R.string.panel_title_realtime
+                else -> R.string.panel_title
+            }
+        )
+        p.tvAnswerLabel.text = getString(
+            when (mode) {
+                Prefs.MODE_DAILY -> R.string.panel_answer_label_daily
+                Prefs.MODE_REALTIME -> R.string.panel_answer_label_realtime
+                else -> R.string.panel_answer_label
+            }
+        )
+        updateRealtimeButton()
+        styleSeg(p.segSolve, mode == Prefs.MODE_SOLVE)
         styleSeg(p.segDaily, daily)
-        setPanelFocusable(daily)
+        styleSeg(p.segRealtime, realtime)
+        // 关键：面板默认保持「非获焦」，否则可获焦的 overlay 会成为返回手势的目标，
+        // 导致全面屏边缘向内划返回被屏蔽。仅在输入框获得焦点时才临时可获焦（见 etRequest 回调）。
+        setPanelFocusable(false)
+    }
+
+    /** 主按钮文案随模式变化：解题=重新解答，日常=发送，实时=开始/暂停实时。 */
+    private fun updateRealtimeButton() {
+        val p = panel ?: return
+        p.btnReread.text = getString(
+            when (Prefs.mode(this)) {
+                Prefs.MODE_DAILY -> R.string.btn_send
+                Prefs.MODE_REALTIME ->
+                    if (realtimeActive) R.string.btn_realtime_stop else R.string.btn_realtime_start
+                else -> R.string.btn_reread
+            }
+        )
     }
 
     private fun setMode(mode: String) {
         if (Prefs.mode(this) == mode) return
+        // 离开实时模式前先停掉采集循环
+        if (Prefs.mode(this) == Prefs.MODE_REALTIME) stopRealtime()
         Prefs.setMode(this, mode)
-        val daily = mode == Prefs.MODE_DAILY
+        lastFingerprint = null
         answerBuffer.setLength(0)
         renderAnswer("")
-        panel?.tvStatus?.text =
-            getString(if (daily) R.string.panel_status_idle_daily else R.string.panel_status_idle)
+        panel?.tvStatus?.text = getString(
+            when (mode) {
+                Prefs.MODE_DAILY -> R.string.panel_status_idle_daily
+                Prefs.MODE_REALTIME -> R.string.panel_status_realtime_idle
+                else -> R.string.panel_status_idle
+            }
+        )
         applyMode()
+        if (mode == Prefs.MODE_REALTIME && panel?.root?.visibility == View.VISIBLE) {
+            startRealtime()
+        }
     }
 
     private fun styleSeg(view: TextView, selected: Boolean) {
@@ -728,7 +868,7 @@ class FloatingService : Service() {
     // ---------------------------------------------------------------- 核心流程
 
     /**
-     * 截屏并进入后续流程。
+     * 截屏并进入后续流程。面板保持可见，不闪屏；悬浮层（悬浮球 + 面板）区域在截图上涂白遮挡。
      * @param request 为 null 走解题模式（读题 → 答题）；非 null 走日常模式（截图+需求 → 直接给指引）。
      */
     private fun doCapture(request: String? = null) {
@@ -738,36 +878,30 @@ class FloatingService : Service() {
         busy = true
         val daily = request != null
 
-        val p = ensurePanel()
-        p.root.visibility = View.GONE
-        ball?.root?.visibility = View.GONE
+        // 面板保持可见（同时隐藏悬浮球），截屏不再隐藏悬浮层，避免画面闪烁
+        val p = showPanel()
+        p.tvStatus.text = getString(R.string.panel_status_capturing)
+        answerBuffer.setLength(0)
+        renderAnswer("")
+        if (!daily) p.tvQuestion.text = getString(R.string.panel_question_empty)
 
-        // 收起悬浮层后稍等一帧再截屏，避免把悬浮球/面板截进去
-        handler.postDelayed({
-            Thread {
-                val bitmap = capture?.capture()
+        Thread {
+            val bitmap = capture?.capture()
+            if (bitmap == null) {
                 handler.post {
-                    p.root.visibility = View.VISIBLE
-                    ball?.root?.visibility = View.VISIBLE
-                    p.tvStatus.text = getString(R.string.panel_status_capturing)
-                    answerBuffer.setLength(0)
-                    renderAnswer("")
-                    if (!daily) p.tvQuestion.text = getString(R.string.panel_question_empty)
+                    p.tvStatus.text = getString(R.string.panel_status_capture_fail)
+                    busy = false
                 }
-                if (bitmap == null) {
-                    handler.post {
-                        p.tvStatus.text = getString(R.string.panel_status_capture_fail)
-                        busy = false
-                    }
-                    return@Thread
-                }
-                val base64 = bitmapToJpegBase64(bitmap)
-                bitmap.recycle()
-                handler.post {
-                    if (daily) startDaily(base64, request.orEmpty()) else startPipeline(listOf(base64))
-                }
-            }.start()
-        }, CAPTURE_DELAY_MS)
+                return@Thread
+            }
+            // 在截图上把悬浮层区域涂白，等效于「看不见悬浮窗」，但屏幕本身不闪
+            maskOverlays(bitmap)
+            val base64 = bitmapToJpegBase64(bitmap)
+            bitmap.recycle()
+            handler.post {
+                if (daily) startDaily(base64, request.orEmpty()) else startPipeline(listOf(base64))
+            }
+        }.start()
     }
 
     /** 截图转 JPEG base64（长边限制在 [VISION_MAX_SIDE] 内，兼顾清晰度与上传体积）。 */
@@ -895,6 +1029,151 @@ class FloatingService : Service() {
         }.start()
     }
 
+    // ---------------------------------------------------------------- 实时模式
+
+    /**
+     * 开始实时：开启采集循环，持续观察屏幕。
+     * 有常驻的文字/语音需求时一并带上；屏幕无变化则跳过，避免无效请求。
+     */
+    private fun startRealtime() {
+        if (realtimeActive) return
+        if (capture == null) {
+            panel?.tvStatus?.text = getString(R.string.panel_status_capture_fail)
+            return
+        }
+        if (Prefs.apiKey(this, Prefs.PROVIDER_QWEN).isBlank()) {
+            panel?.tvStatus?.text = getString(R.string.status_need_qwen_key)
+            return
+        }
+        realtimeActive = true
+        realtimeBusy = false
+        lastFingerprint = null
+        panel?.tvStatus?.text = getString(R.string.panel_status_realtime_idle)
+        updateRealtimeButton()
+        scheduleRealtime()
+    }
+
+    /** 暂停实时：停止采集循环并清空指纹；已完成渲染的答案保留在面板上。 */
+    private fun stopRealtime() {
+        handler.removeCallbacks(realtimeTick)
+        realtimeBusy = false
+        if (!realtimeActive) {
+            updateRealtimeButton()
+            return
+        }
+        realtimeActive = false
+        lastFingerprint = null
+        cancelStream()
+        panel?.tvStatus?.text = getString(R.string.panel_status_realtime_paused)
+        updateRealtimeButton()
+    }
+
+    private fun toggleRealtime() {
+        if (realtimeActive) stopRealtime() else startRealtime()
+    }
+
+    private fun scheduleRealtime() {
+        handler.removeCallbacks(realtimeTick)
+        handler.postDelayed(realtimeTick, REALTIME_INTERVAL_MS)
+    }
+
+    /**
+     * 采集一帧：后台截屏 → 涂白悬浮层 → 与上一帧指纹比对。
+     * 画面明显变化才交千问即时回答；无变化则直接安排下一轮。请求期间不重入。
+     */
+    private fun realtimeGrab() {
+        if (!realtimeActive) return
+        val cap = capture
+        if (cap == null) {
+            stopRealtime()
+            return
+        }
+        if (realtimeBusy) {
+            scheduleRealtime()
+            return
+        }
+        realtimeBusy = true
+        Thread {
+            val bitmap = cap.capture()
+            var base64: String? = null
+            if (bitmap != null) {
+                maskOverlays(bitmap)
+                val fp = fingerprint(bitmap)
+                val prev = lastFingerprint
+                if (prev == null || !similar(prev, fp)) {
+                    lastFingerprint = fp
+                    base64 = bitmapToJpegBase64(bitmap)
+                }
+                bitmap.recycle()
+            }
+            handler.post {
+                realtimeBusy = false
+                if (!realtimeActive) return@post
+                val b64 = base64
+                if (b64 != null) startRealtimeAsk(b64) else scheduleRealtime()
+            }
+        }.start()
+    }
+
+    /** 把当前帧与常驻需求交千问即时回答（单段，不经读题 → 答题）。完成后安排下一轮。 */
+    private fun startRealtimeAsk(imageBase64: String) {
+        if (!realtimeActive) return
+        val key = Prefs.apiKey(this, Prefs.PROVIDER_QWEN)
+        if (key.isBlank()) {
+            panel?.tvStatus?.text = getString(R.string.status_need_qwen_key)
+            stopRealtime()
+            return
+        }
+        val request = panel?.etRequest?.text?.toString().orEmpty()
+        cancelStream()
+        answerBuffer.setLength(0)
+        renderAnswer("")
+        panel?.tvStatus?.text = getString(R.string.panel_status_realtime)
+
+        val c = ChatClient(key, Prefs.MODEL_QWEN_VISION, ChatClient.QWEN_URL)
+        client = c
+        Thread {
+            c.streamImageAsk(
+                imageBase64 = imageBase64,
+                request = request,
+                onDelta = { delta -> handleDelta(delta) },
+                onDone = {
+                    handler.post {
+                        finishStream()
+                        if (realtimeActive) scheduleRealtime()
+                    }
+                },
+                onError = { msg ->
+                    handler.post {
+                        panel?.tvStatus?.text = getString(R.string.panel_status_error) + msg
+                        if (realtimeActive) scheduleRealtime()
+                    }
+                },
+                prompt = ChatClient.REALTIME_PROMPT
+            )
+        }.start()
+    }
+
+    /** 16×16 灰度指纹：缩放后取每点亮度，用于快速判断画面是否变化。 */
+    private fun fingerprint(bitmap: Bitmap): IntArray {
+        val small = Bitmap.createScaledBitmap(bitmap, FP_SIZE, FP_SIZE, true)
+        val pixels = IntArray(FP_SIZE * FP_SIZE)
+        small.getPixels(pixels, 0, FP_SIZE, 0, 0, FP_SIZE, FP_SIZE)
+        if (small !== bitmap) small.recycle()
+        return IntArray(pixels.size) { i ->
+            val c = pixels[i]
+            (Color.red(c) * 299 + Color.green(c) * 587 + Color.blue(c) * 114) / 1000
+        }
+    }
+
+    /** 两帧指纹的平均绝对差低于阈值即视为「画面未变化」。 */
+    private fun similar(a: IntArray, b: IntArray): Boolean {
+        if (a.size != b.size || a.isEmpty()) return false
+        var sum = 0
+        for (i in a.indices) sum += abs(a[i] - b[i])
+        return sum / a.size < REALTIME_DIFF_THRESHOLD
+    }
+
     // ---------------------------------------------------------------- 翻动拼接识别（解题模式）
 
     /**
@@ -993,6 +1272,44 @@ class FloatingService : Service() {
         )
     }
 
+    /** 面板在屏幕截图中的外接矩形；面板不可见时返回 null（同样需补状态栏高度）。 */
+    private fun panelMaskRect(): Rect? {
+        if (!::panelParams.isInitialized) return null
+        if (panel?.root?.visibility != View.VISIBLE) return null
+        val inset = topInsetPx()
+        return Rect(
+            panelParams.x,
+            panelParams.y + inset,
+            panelParams.x + panelParams.width,
+            panelParams.y + panelParams.height + inset
+        )
+    }
+
+    /** 需要在截图中遮挡的全部悬浮层区域（可见的悬浮球与面板）。 */
+    private fun overlayMaskRects(): List<Rect> =
+        listOfNotNull(ballMaskRect(), panelMaskRect())
+
+    /** 把悬浮层区域在截图上涂白：截屏不必隐藏悬浮窗，画面也不会闪。 */
+    private fun maskOverlays(bitmap: Bitmap) {
+        val rects = overlayMaskRects()
+        if (rects.isEmpty()) return
+        val pad = dp(2)
+        val canvas = Canvas(bitmap)
+        val paint = Paint().apply {
+            color = Color.WHITE
+            style = Paint.Style.FILL
+        }
+        for (r in rects) {
+            canvas.drawRect(
+                (r.left - pad).toFloat(),
+                (r.top - pad).toFloat(),
+                (r.right + pad).toFloat(),
+                (r.bottom + pad).toFloat(),
+                paint
+            )
+        }
+    }
+
     private fun topInsetPx(): Int =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             runCatching {
@@ -1029,6 +1346,8 @@ class FloatingService : Service() {
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         Prefs.unregisterModeListener(this, modeListener)
+        realtimeActive = false
+        realtimeBusy = false
         stitching = false
         stitcher = null
         stitchSlices.clear()
@@ -1055,7 +1374,6 @@ class FloatingService : Service() {
     companion object {
         private const val TAG = "FloatingService"
         private const val NOTIF_ID = 1001
-        private const val CAPTURE_DELAY_MS = 160L
         private const val BALL_SIZE_DP = 56
         private const val BALL_MARGIN_DP = 8
         private const val PANEL_WIDTH_DP = 320
@@ -1079,6 +1397,15 @@ class FloatingService : Service() {
 
         /** 翻动拼接：最多累积的片段数，防止内存与请求体过大 */
         private const val MAX_STITCH_SLICES = 12
+
+        /** 实时模式：两次采集之间的间隔（毫秒） */
+        private const val REALTIME_INTERVAL_MS = 3000L
+
+        /** 实时模式：画面指纹平均绝对差低于该值即视为「未变化」，跳过请求 */
+        private const val REALTIME_DIFF_THRESHOLD = 8
+
+        /** 实时模式：画面指纹缩放边长（像素），16×16 足以判断整体变化 */
+        private const val FP_SIZE = 16
 
         /** 视觉直传时截图长边上限（像素），控制上传体积与响应速度 */
         private const val VISION_MAX_SIDE = 1600

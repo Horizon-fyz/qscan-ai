@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -8,6 +9,17 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- 文件管理：全设备文件访问（Android 11+ 走「所有文件访问」特殊权限） -->
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
 
     <application
         android:allowBackup="true"
@@ -27,10 +39,39 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".HelpActivity"
+            android:exported="false" />
+
+        <!-- 导出：无界面浮层的选择器 + 落地执行（PDF/HTML/长图需 WebView，故用 Activity 上下文） -->
+        <activity
+            android:name=".ExportActivity"
+            android:exported="false"
+            android:theme="@style/Theme.QuickAnswer.Transparent" />
+
+        <!-- 文件管理：类似 MT 管理器的全设备文件浏览器 -->
+        <activity
+            android:name=".FileManagerActivity"
+            android:exported="false" />
+
         <service
             android:name=".FloatingService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection|microphone" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

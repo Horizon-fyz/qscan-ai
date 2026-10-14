@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 密钥设置页：集中管理两把 API Key、答题模型与默认模式；
+     与首页（导航/启动）、使用说明页职责分离。基准 notion/DESIGN.md。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/brand_navy"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <!-- 顶栏：返回 + 标题（沿用深蓝，与首页 hero 同一语言） -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/brand_navy"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_xs"
+        android:paddingTop="@dimen/space_xs"
+        android:paddingEnd="@dimen/space_xl"
+        android:paddingBottom="@dimen/space_xs">
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="@dimen/touch_target"
+            android:layout_height="@dimen/touch_target"
+            android:clickable="true"
+            android:contentDescription="@string/back"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="‹"
+            android:textColor="@color/on_dark"
+            android:textSize="26sp" />
+
+        <TextView
+            style="@style/Tv.HeroTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_xxs"
+            android:text="@string/config_title" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/surface"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/space_lg">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="@dimen/space_xl">
+
+                <TextView
+                    style="@style/Tv.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/api_key_qwen_title" />
+
+                <EditText
+                    android:id="@+id/etQwenKey"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/control_height"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:background="@drawable/bg_input"
+                    android:fontFamily="sans-serif"
+                    android:hint="@string/api_key_hint"
+                    android:inputType="textVisiblePassword"
+                    android:paddingStart="@dimen/space_md"
+                    android:paddingEnd="@dimen/space_md"
+                    android:singleLine="true"
+                    android:textColor="@color/ink"
+                    android:textColorHint="@color/muted"
+                    android:textSize="16sp" />
+
+                <TextView
+                    style="@style/Tv.Caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="@string/api_key_note_qwen" />
+
+                <TextView
+                    style="@style/Tv.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:text="@string/api_key_ds_title" />
+
+                <EditText
+                    android:id="@+id/etDsKey"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/control_height"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:background="@drawable/bg_input"
+                    android:fontFamily="sans-serif"
+                    android:hint="@string/api_key_hint"
+                    android:inputType="textVisiblePassword"
+                    android:paddingStart="@dimen/space_md"
+                    android:paddingEnd="@dimen/space_md"
+                    android:singleLine="true"
+                    android:textColor="@color/ink"
+                    android:textColorHint="@color/muted"
+                    android:textSize="16sp" />
+
+                <TextView
+                    style="@style/Tv.Caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="@string/api_key_note" />
+
+                <TextView
+                    style="@style/Tv.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:text="@string/model_title" />
+
+                <!-- 答题模型切换：pill-tab（选中 = 实底白字，未选中 = 透明 + hairline 描边） -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/segChat"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/control_height"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeMinTextSize="10sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:autoSizeTextType="uniform"
+                        android:background="@drawable/bg_segment_selected"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/model_chat"
+                        android:textColor="@color/on_dark"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/segReasoner"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/control_height"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeMinTextSize="10sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:autoSizeTextType="uniform"
+                        android:background="@drawable/bg_segment_default"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/model_reasoner"
+                        android:textColor="@color/steel"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/Tv.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:text="@string/mode_title" />
+
+                <!-- 默认模式：pill-tab（解题 / 日常 / 实时）；面板内仍可实时切换 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/segModeSolve"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/control_height"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeMinTextSize="10sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:autoSizeTextType="uniform"
+                        android:background="@drawable/bg_segment_selected"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/mode_solve"
+                        android:textColor="@color/on_dark"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/segModeDaily"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/control_height"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeMinTextSize="10sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:autoSizeTextType="uniform"
+                        android:background="@drawable/bg_segment_default"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/mode_daily"
+                        android:textColor="@color/steel"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/segModeRealtime"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/control_height"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:layout_weight="1"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeMinTextSize="10sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:autoSizeTextType="uniform"
+                        android:background="@drawable/bg_segment_default"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/mode_realtime"
+                        android:textColor="@color/steel"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/Tv.Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="@string/mode_note" />
+
+                <TextView
+                    style="@style/Tv.Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md"
+                    android:text="@string/settings_autosave" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
