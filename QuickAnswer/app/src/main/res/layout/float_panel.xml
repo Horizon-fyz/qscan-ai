@@ -2,238 +2,269 @@
 <!-- 结果面板（基准 notion/DESIGN.md）：canvas 白卡（圆角 lg）。
      上半区「题目识别」= surface 浅灰底，下半区「答案输出」= 白底 + hairline 描边，两区按 weight 等分。
      顶部 grabber 拖动条 + 标题区为拖拽手柄（id=panelHeader）。
-     区域标签采用 badge-tag chip：题目=peach / 答案=lavender，呼应 Notion 彩色属性标签。 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     区域标签采用 badge-tag chip：题目=peach / 答案=lavender，呼应 Notion 彩色属性标签。
+     根容器为 FrameLayout，最上层叠加四个透明热区（handle_tl/tr/bl/br），仅用于「四角拖拽缩放」。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/panel"
     android:layout_width="320dp"
     android:layout_height="@dimen/panel_height"
     android:background="@drawable/bg_panel"
-    android:elevation="6dp"
-    android:orientation="vertical"
-    android:padding="@dimen/space_md">
+    android:elevation="6dp">
 
-    <!-- 拖动头：拖动条 + 标题 + 关闭 -->
     <LinearLayout
-        android:id="@+id/panelHeader"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="@dimen/space_md">
 
-        <View
-            android:layout_width="@dimen/grabber_width"
-            android:layout_height="@dimen/grabber_height"
-            android:background="@drawable/bg_grabber" />
+        <!-- 拖动头：拖动条 + 标题 + 关闭 -->
+        <LinearLayout
+            android:id="@+id/panelHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
+            <View
+                android:layout_width="@dimen/grabber_width"
+                android:layout_height="@dimen/grabber_height"
+                android:background="@drawable/bg_grabber" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvTitle"
+                    style="@style/Tv.SectionTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/panel_title" />
+
+                <TextView
+                    android:id="@+id/btnClose"
+                    android:layout_width="@dimen/touch_target"
+                    android:layout_height="@dimen/touch_target"
+                    android:fontFamily="sans-serif"
+                    android:gravity="center"
+                    android:text="✕"
+                    android:textColor="@color/steel"
+                    android:textSize="18sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            style="@style/Tv.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/panel_status_idle" />
+
+        <!-- 模式切换：解题 / 日常（pill-tab），面板内实时生效，与主界面默认可不同 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_xs"
-            android:gravity="center_vertical"
+            android:baselineAligned="false"
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/tvTitle"
-                style="@style/Tv.SectionTitle"
+                android:id="@+id/segSolve"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_segment_selected"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:maxLines="1"
+                android:text="@string/mode_solve"
+                android:textColor="@color/on_dark"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/segDaily"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="@dimen/space_xs"
+                android:layout_weight="1"
+                android:background="@drawable/bg_segment_default"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:maxLines="1"
+                android:text="@string/mode_daily"
+                android:textColor="@color/steel"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- 日常模式需求输入行：文字输入 + 语音；仅日常模式可见 -->
+        <LinearLayout
+            android:id="@+id/dailyInputBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/etRequest"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_input"
+                android:fontFamily="sans-serif"
+                android:hint="@string/et_request_hint"
+                android:imeOptions="actionSend"
+                android:inputType="text"
+                android:paddingStart="@dimen/space_sm"
+                android:paddingEnd="@dimen/space_sm"
+                android:singleLine="true"
+                android:textColor="@color/ink"
+                android:textColorHint="@color/muted"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/btnVoice"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="@dimen/space_xs"
+                android:background="@drawable/bg_button_secondary"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:minWidth="56dp"
+                android:paddingStart="@dimen/space_sm"
+                android:paddingEnd="@dimen/space_sm"
+                android:text="@string/btn_voice"
+                android:textColor="@color/ink"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- 上半区：题目识别（日常模式下隐藏） -->
+        <LinearLayout
+            android:id="@+id/zoneQuestion"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/space_sm"
+            android:layout_weight="1"
+            android:background="@drawable/bg_zone_question"
+            android:orientation="vertical"
+            android:padding="@dimen/space_sm">
+
+            <TextView
+                style="@style/Tv.Tag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_tag_peach"
+                android:paddingStart="@dimen/space_xs"
+                android:paddingTop="2dp"
+                android:paddingEnd="@dimen/space_xs"
+                android:paddingBottom="2dp"
+                android:text="@string/panel_question_label"
+                android:textColor="@color/brand_orange_deep" />
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/space_xs"
+                android:layout_weight="1"
+                android:scrollbars="vertical">
+
+                <TextView
+                    android:id="@+id/tvQuestion"
+                    style="@style/Tv.BodySm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/panel_question_empty" />
+            </ScrollView>
+        </LinearLayout>
+
+        <!-- 下半区：答案输出 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/space_xs"
+            android:layout_weight="1"
+            android:background="@drawable/bg_zone_answer"
+            android:orientation="vertical"
+            android:padding="@dimen/space_sm">
+
+            <TextView
+                android:id="@+id/tvAnswerLabel"
+                style="@style/Tv.Tag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_tag_lavender"
+                android:paddingStart="@dimen/space_xs"
+                android:paddingTop="2dp"
+                android:paddingEnd="@dimen/space_xs"
+                android:paddingBottom="2dp"
+                android:text="@string/panel_answer_label"
+                android:textColor="@color/brand_purple_800" />
+
+            <!-- 答案区：离线 KaTeX 完整渲染 LaTeX（matrices / 分式 / 积分 / 对齐环境等），自带滚动 -->
+            <WebView
+                android:id="@+id/webAnswer"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/space_xs"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:scrollbars="vertical" />
+        </LinearLayout>
+
+        <!-- 操作 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnCopy"
+                style="@style/Btn.Secondary"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/panel_title" />
+                android:text="@string/btn_copy" />
 
-            <TextView
-                android:id="@+id/btnClose"
-                android:layout_width="@dimen/touch_target"
-                android:layout_height="@dimen/touch_target"
-                android:fontFamily="sans-serif"
-                android:gravity="center"
-                android:text="✕"
-                android:textColor="@color/steel"
-                android:textSize="18sp" />
+            <Button
+                android:id="@+id/btnReread"
+                style="@style/Btn.Primary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_xs"
+                android:layout_weight="1"
+                android:text="@string/btn_reread" />
         </LinearLayout>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvStatus"
-        style="@style/Tv.Caption"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="@string/panel_status_idle" />
+    <!-- 四角缩放热区：透明，位于最上层，拖动某个角即从该角缩放（仅四角缩放） -->
+    <FrameLayout
+        android:id="@+id/handle_tl"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_gravity="top|start" />
 
-    <!-- 模式切换：解题 / 日常（pill-tab），面板内实时生效，与主界面默认可不同 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_xs"
-        android:baselineAligned="false"
-        android:orientation="horizontal">
+    <FrameLayout
+        android:id="@+id/handle_tr"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_gravity="top|end" />
 
-        <TextView
-            android:id="@+id/segSolve"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_segment_selected"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
-            android:maxLines="1"
-            android:text="@string/mode_solve"
-            android:textColor="@color/on_dark"
-            android:textSize="13sp" />
+    <FrameLayout
+        android:id="@+id/handle_bl"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_gravity="bottom|start" />
 
-        <TextView
-            android:id="@+id/segDaily"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="@dimen/space_xs"
-            android:layout_weight="1"
-            android:background="@drawable/bg_segment_default"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
-            android:maxLines="1"
-            android:text="@string/mode_daily"
-            android:textColor="@color/steel"
-            android:textSize="13sp" />
-    </LinearLayout>
-
-    <!-- 日常模式需求输入行：文字输入 + 语音；仅日常模式可见 -->
-    <LinearLayout
-        android:id="@+id/dailyInputBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_xs"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-
-        <EditText
-            android:id="@+id/etRequest"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_input"
-            android:fontFamily="sans-serif"
-            android:hint="@string/et_request_hint"
-            android:imeOptions="actionSend"
-            android:inputType="text"
-            android:paddingStart="@dimen/space_sm"
-            android:paddingEnd="@dimen/space_sm"
-            android:singleLine="true"
-            android:textColor="@color/ink"
-            android:textColorHint="@color/muted"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/btnVoice"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginStart="@dimen/space_xs"
-            android:background="@drawable/bg_button_secondary"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
-            android:minWidth="56dp"
-            android:paddingStart="@dimen/space_sm"
-            android:paddingEnd="@dimen/space_sm"
-            android:text="@string/btn_voice"
-            android:textColor="@color/ink"
-            android:textSize="14sp" />
-    </LinearLayout>
-
-    <!-- 上半区：题目识别（日常模式下隐藏） -->
-    <LinearLayout
-        android:id="@+id/zoneQuestion"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="@dimen/space_sm"
-        android:layout_weight="1"
-        android:background="@drawable/bg_zone_question"
-        android:orientation="vertical"
-        android:padding="@dimen/space_sm">
-
-        <TextView
-            style="@style/Tv.Tag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_tag_peach"
-            android:paddingStart="@dimen/space_xs"
-            android:paddingTop="2dp"
-            android:paddingEnd="@dimen/space_xs"
-            android:paddingBottom="2dp"
-            android:text="@string/panel_question_label"
-            android:textColor="@color/brand_orange_deep" />
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="@dimen/space_xs"
-            android:layout_weight="1"
-            android:scrollbars="vertical">
-
-            <TextView
-                android:id="@+id/tvQuestion"
-                style="@style/Tv.BodySm"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/panel_question_empty" />
-        </ScrollView>
-    </LinearLayout>
-
-    <!-- 下半区：答案输出 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="@dimen/space_xs"
-        android:layout_weight="1"
-        android:background="@drawable/bg_zone_answer"
-        android:orientation="vertical"
-        android:padding="@dimen/space_sm">
-
-        <TextView
-            android:id="@+id/tvAnswerLabel"
-            style="@style/Tv.Tag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_tag_lavender"
-            android:paddingStart="@dimen/space_xs"
-            android:paddingTop="2dp"
-            android:paddingEnd="@dimen/space_xs"
-            android:paddingBottom="2dp"
-            android:text="@string/panel_answer_label"
-            android:textColor="@color/brand_purple_800" />
-
-        <!-- 答案区：离线 KaTeX 完整渲染 LaTeX（matrices / 分式 / 积分 / 对齐环境等），自带滚动 -->
-        <WebView
-            android:id="@+id/webAnswer"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="@dimen/space_xs"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:scrollbars="vertical" />
-    </LinearLayout>
-
-    <!-- 操作 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/btnCopy"
-            style="@style/Btn.Secondary"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/btn_copy" />
-
-        <Button
-            android:id="@+id/btnReread"
-            style="@style/Btn.Primary"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_xs"
-            android:layout_weight="1"
-            android:text="@string/btn_reread" />
-    </LinearLayout>
-</LinearLayout>
+    <FrameLayout
+        android:id="@+id/handle_br"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_gravity="bottom|end" />
+</FrameLayout>

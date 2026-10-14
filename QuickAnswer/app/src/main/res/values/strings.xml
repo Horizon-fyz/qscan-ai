@@ -40,7 +40,7 @@
     <string name="notif_text">点击悬浮球即可截屏识别题目</string>
 
     <string name="ball_text">答</string>
-    <string name="ball_text_daily">指</string>
+    <string name="ball_text_daily">日</string>
 
     <string name="panel_title">解答</string>
     <string name="panel_title_daily">日常助手</string>

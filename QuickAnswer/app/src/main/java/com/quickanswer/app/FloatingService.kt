@@ -1,6 +1,7 @@
 package com.quickanswer.app
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -361,8 +362,12 @@ class FloatingService : Service() {
                         return true
                     }
                     MotionEvent.ACTION_MOVE -> {
-                        panelParams.x = (startX + (event.rawX - downX)).toInt().coerceIn(0, maxX)
-                        panelParams.y = (startY + (event.rawY - downY)).toInt().coerceIn(0, maxY)
+                        // 边界随当前面板尺寸动态计算，缩放后拖动仍能贴边不越界
+                        val b = overlayBounds()
+                        val limitX = (b.x - panelParams.width).coerceAtLeast(0)
+                        val limitY = (b.y - panelParams.height).coerceAtLeast(0)
+                        panelParams.x = (startX + (event.rawX - downX)).toInt().coerceIn(0, limitX)
+                        panelParams.y = (startY + (event.rawY - downY)).toInt().coerceIn(0, limitY)
                         windowManager.updateViewLayout(binding.root, panelParams)
                         return true
                     }
@@ -370,6 +375,12 @@ class FloatingService : Service() {
                 return false
             }
         })
+
+        // 四角拖拽缩放：拖动哪个角，就从哪个角单独缩放（仅四角，不含双指捏合）
+        setupResize(binding.handleTl, CORNER_TL)
+        setupResize(binding.handleTr, CORNER_TR)
+        setupResize(binding.handleBl, CORNER_BL)
+        setupResize(binding.handleBr, CORNER_BR)
 
         setupWebView(binding.webAnswer)
 
@@ -404,6 +415,89 @@ class FloatingService : Service() {
         applyMode()
         return binding
     }
+
+    /**
+     * 角手柄缩放：拖动某个角时，该角所在的两条边跟随手指移动，对角的边保持不动。
+     * 用「窗口四条边」而非「宽高」计算，越界时锚定边也不会漂移（参照 MilQuiz 的四角缩放）。
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupResize(handle: View, corner: Int) {
+        // 必须可点击，否则该 View 不会成为触摸目标，后续 MOVE 事件收不到（缩放会失效）
+        handle.isClickable = true
+        var downX = 0f
+        var downY = 0f
+        var l0 = 0
+        var t0 = 0
+        var r0 = 0
+        var b0 = 0
+        handle.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    downX = event.rawX
+                    downY = event.rawY
+                    l0 = panelParams.x
+                    t0 = panelParams.y
+                    r0 = panelParams.x + panelParams.width
+                    b0 = panelParams.y + panelParams.height
+                    false
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = (event.rawX - downX).toInt()
+                    val dy = (event.rawY - downY).toInt()
+                    if (abs(dx) <= dp(3) && abs(dy) <= dp(3)) {
+                        return@setOnTouchListener false
+                    }
+
+                    val isLeft = corner == CORNER_TL || corner == CORNER_BL
+                    val isTop = corner == CORNER_TL || corner == CORNER_TR
+
+                    val bounds = overlayBounds()
+                    val minWinW = dp(MIN_PANEL_WIDTH_DP)
+                    val minWinH = dp(MIN_PANEL_HEIGHT_DP)
+                    val maxWinW = bounds.x
+                    val maxWinH = bounds.y
+
+                    var l = l0
+                    var t = t0
+                    var r = r0
+                    var b = b0
+                    // 只移动被拖的那两条边；对角的边完全不动
+                    if (isLeft) {
+                        l = (l0 + dx).coerceAtMost(r0 - minWinW).coerceAtLeast(0)
+                    } else {
+                        r = (r0 + dx).coerceAtLeast(l0 + minWinW).coerceAtMost(bounds.x)
+                    }
+                    if (isTop) {
+                        t = (t0 + dy).coerceAtMost(b0 - minWinH).coerceAtLeast(0)
+                    } else {
+                        b = (b0 + dy).coerceAtLeast(t0 + minWinH).coerceAtMost(bounds.y)
+                    }
+
+                    var w = r - l
+                    var h = b - t
+                    // 超过最大尺寸时，收回「被拖动的那条边」，锚定边仍不动
+                    if (w > maxWinW) {
+                        w = maxWinW
+                        if (isLeft) l = r - w else r = l + w
+                    }
+                    if (h > maxWinH) {
+                        h = maxWinH
+                        if (isTop) t = b - h else b = t + h
+                    }
+
+                    panelParams.width = w
+                    panelParams.height = h
+                    panelParams.x = l
+                    panelParams.y = t
+                    runCatching { windowManager.updateViewLayout(panel!!.root, panelParams) }
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     /** 初始化答案区 WebView：加载离线模板（内嵌 KaTeX + marked），开启 JS 以便流式重绘。 */
     private fun setupWebView(web: WebView) {
@@ -824,6 +918,16 @@ class FloatingService : Service() {
         private const val BALL_MARGIN_DP = 8
         private const val PANEL_WIDTH_DP = 320
         private const val PANEL_HEIGHT_DP = 560
+
+        /** 四角缩放时可缩到的最小面板尺寸（dp） */
+        private const val MIN_PANEL_WIDTH_DP = 240
+        private const val MIN_PANEL_HEIGHT_DP = 320
+
+        /** 四角缩放热区对应的四个角 */
+        private const val CORNER_TL = 0
+        private const val CORNER_TR = 1
+        private const val CORNER_BL = 2
+        private const val CORNER_BR = 3
 
         /** 流式渲染节流间隔（毫秒） */
         private const val RENDER_THROTTLE_MS = 120L
