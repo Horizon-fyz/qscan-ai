@@ -57,6 +57,45 @@ object Prefs {
     const val MODEL_CHAT = "deepseek-chat"
     const val MODEL_REASONER = "deepseek-reasoner"
 
+    // ---------------------------------------------------------------- 答题通道
+
+    private const val KEY_TEXT_CUSTOM = "text_custom"
+    private const val KEY_TEXT_BASE_URL = "text_base_url"
+    private const val KEY_TEXT_MODEL = "text_model"
+
+    /** 官方文本答题端点（DeepSeek）；自定义通道以用户填写的请求地址为准。 */
+    const val DEFAULT_TEXT_BASE_URL = "https://api.deepseek.com/v1"
+
+    /** 是否启用自定义答题通道（接入任意 OpenAI 兼容服务）。 */
+    fun textCustom(context: Context): Boolean =
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .getBoolean(KEY_TEXT_CUSTOM, false)
+
+    fun setTextCustom(context: Context, value: Boolean) {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .edit().putBoolean(KEY_TEXT_CUSTOM, value).apply()
+    }
+
+    /** 自定义答题通道的请求地址（base，如 https://api.example.com/v1）。 */
+    fun textBaseUrl(context: Context): String =
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .getString(KEY_TEXT_BASE_URL, DEFAULT_TEXT_BASE_URL).orEmpty()
+
+    fun setTextBaseUrl(context: Context, value: String) {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .edit().putString(KEY_TEXT_BASE_URL, value.trim()).apply()
+    }
+
+    /** 自定义答题通道的模型名（如 gpt-4o-mini / glm-4-plus）。 */
+    fun textModel(context: Context): String =
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .getString(KEY_TEXT_MODEL, MODEL_CHAT).orEmpty()
+
+    fun setTextModel(context: Context, value: String) {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .edit().putString(KEY_TEXT_MODEL, value.trim()).apply()
+    }
+
     // ---------------------------------------------------------------- 工作模式
 
     /** 解题模式：截图 → 千问读题 → DeepSeek 解题。 */

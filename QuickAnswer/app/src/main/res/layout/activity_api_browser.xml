@@ -87,12 +87,44 @@
                     android:layout_height="wrap_content"
                     android:text="@string/browser_note" />
 
+                <!-- 剪贴板识别：复制 Key 后回到此处一键识别并保存 -->
+                <TextView
+                    android:id="@+id/btnScan"
+                    style="@style/Btn.Secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/control_height"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:text="@string/browser_scan" />
+
                 <LinearLayout
                     android:id="@+id/listContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_xs"
                     android:orientation="vertical" />
+
+                <!-- 已保存的密钥：来源识别/手动保存的结果 -->
+                <TextView
+                    style="@style/Tv.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:text="@string/browser_saved_title" />
+
+                <LinearLayout
+                    android:id="@+id/savedContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/tvSavedEmpty"
+                    style="@style/Tv.Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="@string/browser_saved_empty" />
             </LinearLayout>
         </ScrollView>
 

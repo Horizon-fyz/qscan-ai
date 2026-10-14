@@ -17,11 +17,22 @@
     <string name="config_title">模型与密钥</string>
     <string name="settings_autosave">以上设置自动保存于本机，返回首页即可启动。</string>
     <string name="api_key_qwen_title">千问视觉 Key（读题）</string>
-    <string name="api_key_ds_title">DeepSeek Key（答题）</string>
+    <string name="api_key_ds_title">答题 Key（DeepSeek / 自定义）</string>
     <string name="api_key_hint">sk-xxxxxxxx</string>
     <string name="api_key_note_qwen">百炼 Key：在 bailian.console.aliyun.com 申请，用于截图读题。</string>
-    <string name="api_key_note">DeepSeek Key：在 platform.deepseek.com 申请，用于思考作答。</string>
+    <string name="api_key_note">官方通道填 DeepSeek Key（platform.deepseek.com）；自定义通道填所选服务商的 Key，用于思考作答。</string>
     <string name="model_title">答题模型</string>
+
+    <!-- 答题通道（设置页）：官方 DeepSeek / 自定义 OpenAI 兼容 -->
+    <string name="channel_title">答题通道</string>
+    <string name="channel_official">官方 DeepSeek</string>
+    <string name="channel_custom">自定义（OpenAI 兼容）</string>
+    <string name="channel_note">官方通道只需选择模型；自定义通道可接入任意 OpenAI 兼容服务，填写请求地址与模型名即可。</string>
+    <string name="custom_base_title">请求地址</string>
+    <string name="custom_base_hint">https://api.example.com/v1</string>
+    <string name="custom_model_title">模型名</string>
+    <string name="custom_model_hint">如 gpt-4o-mini / glm-4-plus</string>
+    <string name="custom_note">地址填到版本号为止（如 …/v1），请求将发往该地址下的 /chat/completions。</string>
     <string name="model_chat">deepseek-chat</string>
     <string name="model_reasoner">deepseek-reasoner</string>
 
@@ -213,4 +224,33 @@
     <string name="browser_note">仅可访问下列厂商的开放平台页面，用于申请与管理 API Key；其它站点会被自动拦截。</string>
     <string name="browser_blocked">仅支持访问各厂商开放平台页面</string>
     <string name="browser_load_failed">页面加载失败，请检查网络</string>
+    <string name="browser_scan">识别剪贴板中的 API Key</string>
+    <string name="browser_saved_title">已保存的密钥</string>
+    <string name="browser_saved_empty">还没有保存任何密钥。复制厂商的 API Key 后点上方按钮即可识别并保存。</string>
+    <string name="browser_clip_empty">剪贴板为空，请先复制 API Key</string>
+    <string name="browser_clip_url">识别到厂商链接：%1$s，正在打开…</string>
+    <string name="browser_clip_recognized">识别到 %1$s</string>
+    <string name="browser_clip_none">未能识别剪贴板内容，请复制完整的 API Key</string>
+    <string name="browser_save">保存</string>
+    <string name="browser_cancel">取消</string>
+
+    <!-- 保存 API Key 对话框 -->
+    <string name="key_dialog_title">保存 API Key</string>
+    <string name="key_field_api">API Key</string>
+    <string name="key_field_vendor">所属厂商</string>
+    <string name="key_field_base">请求地址（OpenAI 兼容）</string>
+    <string name="key_field_model">模型名</string>
+    <string name="key_custom_vendor">自定义请求地址…</string>
+    <string name="key_pick_placeholder">请选择厂商</string>
+    <string name="key_note_custom">自定义通道：填写任意 OpenAI 兼容服务的请求地址与模型名后即可用于答题。</string>
+    <string name="key_note_official">将接入答题通道：%1$s（模型 %2$s）。</string>
+    <string name="key_note_no_api">该厂商暂不提供 OpenAI 兼容答题接口，仅供参考保存。</string>
+    <string name="key_note_pick">请选择该 Key 所属的厂商；若为第三方或中转服务，请选「自定义请求地址…」。</string>
+    <string name="key_need_key">请填写 API Key</string>
+    <string name="key_need_base">请填写请求地址</string>
+    <string name="key_need_vendor">请选择厂商或改填自定义请求地址</string>
+    <string name="key_saved">已保存</string>
+    <string name="key_removed">已删除</string>
+    <string name="key_delete">删除</string>
+    <string name="key_dialog_note">密钥仅保存在本机；命中官方通道时会自动写入对应的 Key 输入框，可直接使用。</string>
 </resources>

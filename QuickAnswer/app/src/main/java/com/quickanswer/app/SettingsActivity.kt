@@ -37,6 +37,19 @@ class SettingsActivity : AppCompatActivity() {
         binding.segChat.setOnClickListener { selectModel(Prefs.MODEL_CHAT) }
         binding.segReasoner.setOnClickListener { selectModel(Prefs.MODEL_REASONER) }
 
+        // 答题通道：官方（DeepSeek，选模型即可）/ 自定义（任意 OpenAI 兼容地址）
+        binding.etBaseUrl.setText(Prefs.textBaseUrl(this))
+        binding.etTextModel.setText(Prefs.textModel(this))
+        binding.etBaseUrl.doAfterTextChanged {
+            Prefs.setTextBaseUrl(this, it?.toString().orEmpty())
+        }
+        binding.etTextModel.doAfterTextChanged {
+            Prefs.setTextModel(this, it?.toString().orEmpty())
+        }
+        selectChannel(Prefs.textCustom(this))
+        binding.segChannelOfficial.setOnClickListener { selectChannel(false) }
+        binding.segChannelCustom.setOnClickListener { selectChannel(true) }
+
         selectMode(Prefs.mode(this))
         binding.segModeSolve.setOnClickListener { selectMode(Prefs.MODE_SOLVE) }
         binding.segModeDaily.setOnClickListener { selectMode(Prefs.MODE_DAILY) }
@@ -52,6 +65,15 @@ class SettingsActivity : AppCompatActivity() {
         Prefs.setModel(this, model)
         styleSeg(binding.segChat, model == Prefs.MODEL_CHAT)
         styleSeg(binding.segReasoner, model == Prefs.MODEL_REASONER)
+    }
+
+    /** 官方通道：仅需选答题模型；自定义通道：填 OpenAI 兼容请求地址与模型名。 */
+    private fun selectChannel(custom: Boolean) {
+        Prefs.setTextCustom(this, custom)
+        styleSeg(binding.segChannelOfficial, !custom)
+        styleSeg(binding.segChannelCustom, custom)
+        binding.groupOfficialModel.visibility = if (custom) android.view.View.GONE else android.view.View.VISIBLE
+        binding.groupCustom.visibility = if (custom) android.view.View.VISIBLE else android.view.View.GONE
     }
 
     private fun selectMode(mode: String) {

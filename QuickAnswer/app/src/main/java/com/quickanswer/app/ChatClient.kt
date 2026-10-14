@@ -181,12 +181,19 @@ class ChatClient(
         /** DeepSeek 官方（文本模型）。 */
         const val DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
 
+        /** DeepSeek 官方 base 地址（OpenAI 兼容，可拼出 /chat/completions）。 */
+        const val DEEPSEEK_BASE = "https://api.deepseek.com/v1"
+
         /** 阿里云百炼 DashScope OpenAI 兼容端点（含 Qwen-VL 视觉模型）。 */
         const val QWEN_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
 
         /** 依模型名解析服务端点：qwen* → 百炼，其余 → DeepSeek。 */
         fun endpointFor(model: String): String =
             if (Prefs.providerOf(model) == Prefs.PROVIDER_QWEN) QWEN_URL else DEEPSEEK_URL
+
+        /** 由 base 地址拼出 OpenAI 兼容的 chat/completions 端点（自定义通道用）。 */
+        fun chatEndpoint(baseUrl: String): String =
+            baseUrl.trim().trimEnd('/') + "/chat/completions"
 
         private const val LATEX_RULE =
             "排版要求：使用 Markdown 组织内容；所有数学公式一律使用标准 LaTeX 语法并用 \$ 包裹" +

@@ -985,7 +985,7 @@ class FloatingService : Service() {
         }.start()
     }
 
-    /** 第二段：DeepSeek 答题，把读题结果交给所选文本模型并流式渲染。 */
+    /** 第二段：文本答题。官方通道走 DeepSeek，自定义通道走用户配置的 OpenAI 兼容地址。 */
     private fun askModel(question: String) {
         val key = Prefs.apiKey(this, Prefs.PROVIDER_DEEPSEEK)
         if (key.isBlank()) {
@@ -996,8 +996,18 @@ class FloatingService : Service() {
         answerBuffer.setLength(0)
         renderAnswer("")
 
-        val model = Prefs.model(this)
-        val c = ChatClient(key, model, ChatClient.endpointFor(model))
+        val model = if (Prefs.textCustom(this)) {
+            Prefs.textModel(this).ifBlank { Prefs.model(this) }
+        } else {
+            Prefs.model(this)
+        }
+        val endpoint = if (Prefs.textCustom(this)) {
+            val base = Prefs.textBaseUrl(this).ifBlank { Prefs.DEFAULT_TEXT_BASE_URL }
+            ChatClient.chatEndpoint(base)
+        } else {
+            ChatClient.endpointFor(model)
+        }
+        val c = ChatClient(key, model, endpoint)
         client = c
         Thread {
             c.stream(
