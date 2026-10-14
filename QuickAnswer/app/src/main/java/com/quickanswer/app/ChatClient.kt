@@ -159,7 +159,7 @@ class ChatClient(
                         JSONObject(data).optJSONArray("choices")
                             ?.optJSONObject(0)
                             ?.optJSONObject("delta")
-                            ?.optString("content")
+                            ?.let { if (it.isNull("content")) null else it.optString("content") }
                     }.getOrNull()
                     if (!delta.isNullOrEmpty()) onDelta(delta)
                 }
@@ -172,7 +172,8 @@ class ChatClient(
 
     private fun parseError(code: Int, raw: String): String = runCatching {
         val obj = JSONObject(raw)
-        val msg = obj.optJSONObject("error")?.optString("message").orEmpty()
+        val err = obj.optJSONObject("error")
+        val msg = if (err == null || err.isNull("message")) "" else err.optString("message")
         if (msg.isNotEmpty()) msg else "HTTP $code ${raw.take(200)}"
     }.getOrDefault("HTTP $code")
 
