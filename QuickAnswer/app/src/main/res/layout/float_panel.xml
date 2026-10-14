@@ -42,10 +42,12 @@
                 android:maxLines="1"
                 android:text="@string/panel_title" />
 
+            <!-- 关闭键：命中区取 touch_target(48dp) 以满足最小可点尺寸，字形仍为 15sp；
+                 右端与 header 的 marginEnd 保持，避免压到右上角缩放手柄。 -->
             <TextView
                 android:id="@+id/btnClose"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="@dimen/touch_target"
+                android:layout_height="@dimen/touch_target"
                 android:gravity="center"
                 android:text="✕"
                 android:textColor="@color/steel"

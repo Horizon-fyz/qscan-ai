@@ -421,9 +421,10 @@ class FloatingService : Service() {
         setupWebView(binding.webAnswer)
 
         binding.btnClose.setOnClickListener {
+            // 先关面板，确保点击必定有可见结果；再做收尾清理
+            hidePanel()
             hideKeyboard()
             stopRealtime()
-            hidePanel()
         }
         binding.btnReread.setOnClickListener {
             when (Prefs.mode(this)) {
