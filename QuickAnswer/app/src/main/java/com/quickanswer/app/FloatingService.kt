@@ -14,9 +14,7 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.graphics.Rect
@@ -1090,8 +1088,12 @@ class FloatingService : Service() {
     }
 
     /**
-     * 采集一帧：后台截屏 → 涂白悬浮层 → 与上一帧指纹比对。
+     * 采集一帧：后台截屏 → 与上一帧指纹比对。
      * 画面明显变化才交千问即时回答；无变化则直接安排下一轮。请求期间不重入。
+     *
+     * 截屏期间收起悬浮层（面板 + 悬浮球），让任何屏幕都被原样截取：面板居中且约占
+     * 屏幕 2/3，若让它进入截屏，画面中部会连同答案一起被抹掉（涂白只是把面板自己也抹掉，
+     * 结果同样是中部内容丢失）。收起后截到的是无遮挡的真实屏幕内容。
      */
     private fun realtimeGrab() {
         if (!realtimeActive) return
@@ -1105,11 +1107,18 @@ class FloatingService : Service() {
             return
         }
         realtimeBusy = true
+        val p = panel
+        val b = ball
+        val panelWasVisible = p?.root?.visibility == View.VISIBLE
+        val ballWasVisible = b?.root?.visibility == View.VISIBLE
+        if (panelWasVisible) p?.root?.visibility = View.GONE
+        if (ballWasVisible) b?.root?.visibility = View.GONE
         Thread {
+            // GONE 到窗口真正离屏有一帧延迟，稍等片刻避免截到残留悬浮层
+            if (panelWasVisible || ballWasVisible) Thread.sleep(CAPTURE_HIDE_DELAY_MS)
             val bitmap = cap.capture()
             var base64: String? = null
             if (bitmap != null) {
-                maskOverlays(bitmap)
                 val fp = fingerprint(bitmap)
                 val prev = lastFingerprint
                 if (prev == null || !similar(prev, fp)) {
@@ -1119,6 +1128,8 @@ class FloatingService : Service() {
                 bitmap.recycle()
             }
             handler.post {
+                if (panelWasVisible) p?.root?.visibility = View.VISIBLE
+                if (ballWasVisible) b?.root?.visibility = View.VISIBLE
                 realtimeBusy = false
                 if (!realtimeActive) return@post
                 val b64 = base64
@@ -1282,44 +1293,6 @@ class FloatingService : Service() {
             ballParams.x + ballParams.width + pad,
             ballParams.y + ballParams.height + pad + inset
         )
-    }
-
-    /** 面板在屏幕截图中的外接矩形；面板不可见时返回 null（同样需补状态栏高度）。 */
-    private fun panelMaskRect(): Rect? {
-        if (!::panelParams.isInitialized) return null
-        if (panel?.root?.visibility != View.VISIBLE) return null
-        val inset = topInsetPx()
-        return Rect(
-            panelParams.x,
-            panelParams.y + inset,
-            panelParams.x + panelParams.width,
-            panelParams.y + panelParams.height + inset
-        )
-    }
-
-    /** 需要在截图中遮挡的全部悬浮层区域（可见的悬浮球与面板）。 */
-    private fun overlayMaskRects(): List<Rect> =
-        listOfNotNull(ballMaskRect(), panelMaskRect())
-
-    /** 把悬浮层区域在截图上涂白：截屏不必隐藏悬浮窗，画面也不会闪。 */
-    private fun maskOverlays(bitmap: Bitmap) {
-        val rects = overlayMaskRects()
-        if (rects.isEmpty()) return
-        val pad = dp(2)
-        val canvas = Canvas(bitmap)
-        val paint = Paint().apply {
-            color = Color.WHITE
-            style = Paint.Style.FILL
-        }
-        for (r in rects) {
-            canvas.drawRect(
-                (r.left - pad).toFloat(),
-                (r.top - pad).toFloat(),
-                (r.right + pad).toFloat(),
-                (r.bottom + pad).toFloat(),
-                paint
-            )
-        }
     }
 
     private fun topInsetPx(): Int =
