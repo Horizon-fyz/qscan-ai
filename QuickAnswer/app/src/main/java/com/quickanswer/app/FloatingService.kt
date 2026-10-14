@@ -869,7 +869,12 @@ class FloatingService : Service() {
     // ---------------------------------------------------------------- 核心流程
 
     /**
-     * 截屏并进入后续流程。面板保持可见，不闪屏；悬浮层（悬浮球 + 面板）区域在截图上涂白遮挡。
+     * 截屏并进入后续流程。截屏期间收起悬浮层（面板 + 悬浮球），截完再显示面板。
+     *
+     * 为什么必须收起而不是涂白：面板居中且高度约占屏幕 2/3，涂白会连同它覆盖的屏幕
+     * 中部内容一起抹掉。题目的大题题干通常位于屏幕中部，于是读题时只剩顶部/底部的
+     * 小题残片，表现为「只截到小题、大题题干丢失」。
+     *
      * @param request 为 null 走解题模式（读题 → 答题）；非 null 走日常模式（截图+需求 → 直接给指引）。
      */
     private fun doCapture(request: String? = null) {
@@ -879,27 +884,33 @@ class FloatingService : Service() {
         busy = true
         val daily = request != null
 
-        // 面板保持可见（同时隐藏悬浮球），截屏不再隐藏悬浮层，避免画面闪烁
-        val p = showPanel()
+        // 先把面板准备好（可能首次创建）并写入待命状态，但随即隐藏；悬浮球同样隐藏
+        val p = ensurePanel()
         p.tvStatus.text = getString(R.string.panel_status_capturing)
         answerBuffer.setLength(0)
         renderAnswer("")
         if (!daily) p.tvQuestion.text = getString(R.string.panel_question_empty)
+        p.root.visibility = View.GONE
+        ball?.root?.visibility = View.GONE
 
         Thread {
+            // visibility=GONE 到窗口真正从屏幕上移除有一帧延迟，稍等片刻避免截到残留悬浮层
+            Thread.sleep(CAPTURE_HIDE_DELAY_MS)
             val bitmap = capture?.capture()
             if (bitmap == null) {
                 handler.post {
+                    // 截屏失败：恢复悬浮层可见并复位状态
+                    p.root.visibility = View.VISIBLE
                     p.tvStatus.text = getString(R.string.panel_status_capture_fail)
                     busy = false
                 }
                 return@Thread
             }
-            // 在截图上把悬浮层区域涂白，等效于「看不见悬浮窗」，但屏幕本身不闪
-            maskOverlays(bitmap)
+            // 悬浮层已收起，整屏内容（含中部大题题干）完整进入后续流程，无需再涂白遮挡
             val base64 = bitmapToJpegBase64(bitmap)
             bitmap.recycle()
             handler.post {
+                showPanel()
                 if (daily) startDaily(base64, request.orEmpty()) else startPipeline(listOf(base64))
             }
         }.start()
@@ -1392,6 +1403,9 @@ class FloatingService : Service() {
 
         /** 流式渲染节流间隔（毫秒） */
         private const val RENDER_THROTTLE_MS = 120L
+
+        /** 截屏前收起悬浮层后，等待窗口真正离屏的时间（毫秒），避免截到残留悬浮层 */
+        private const val CAPTURE_HIDE_DELAY_MS = 80L
 
         /** 翻动拼接：相邻两帧的采集间隔（毫秒），给用户留出滚动时间 */
         private const val STITCH_INTERVAL_MS = 600L
