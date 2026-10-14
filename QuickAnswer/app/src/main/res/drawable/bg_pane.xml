@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 非活动文件窗口：纯 canvas 白底，靠窗口间 1dp 分隔线区分。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/canvas" />
+</shape>

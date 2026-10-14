@@ -29,4 +29,7 @@
     <dimen name="panel_height">560dp</dimen>
     <dimen name="grabber_width">36dp</dimen>
     <dimen name="grabber_height">4dp</dimen>
+
+    <!-- 文件管理侧拉栏宽度（MT 式抽屉） -->
+    <dimen name="drawer_width">288dp</dimen>
 </resources>

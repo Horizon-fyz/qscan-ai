@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 侧拉栏条目：图标 + 文字，用于「存储」与「书签」列表。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/touch_target"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/space_lg"
+    android:paddingEnd="@dimen/space_lg">
+
+    <TextView
+        android:id="@+id/tvIcon"
+        android:layout_width="22dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@color/brand_purple_300"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/tvLabel"
+        style="@style/Tv.BodySm"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_md"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/on_dark" />
+</LinearLayout>

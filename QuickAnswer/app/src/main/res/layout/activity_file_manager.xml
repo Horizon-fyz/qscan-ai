@@ -1,142 +1,383 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 文件管理页（基准 notion/DESIGN.md）：深蓝顶栏 + 路径行 + 工具行 + 列表。
-     与首页/使用说明页共享同一顶栏语言，工具用 Chip.Action 承载，保持轻量。 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- 文件管理页（基准 notion/DESIGN.md）：MT 式双窗口 + 底部工具栏 + 自绘侧拉栏。
+     双窗口之间靠 1dp 分隔线区分，活动窗口由 bg_pane_active 的 primary 描边标记。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/brand_navy"
-    android:fitsSystemWindows="true"
-    android:orientation="vertical">
+    android:fitsSystemWindows="true">
 
-    <!-- 顶栏：返回 + 标题 -->
+    <!-- 主内容 -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:background="@color/brand_navy"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/space_xs"
-        android:paddingTop="@dimen/space_xs"
-        android:paddingEnd="@dimen/space_xl"
-        android:paddingBottom="@dimen/space_xs">
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/btnBack"
-            android:layout_width="@dimen/touch_target"
-            android:layout_height="@dimen/touch_target"
-            android:clickable="true"
-            android:contentDescription="@string/back"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="‹"
-            android:textColor="@color/on_dark"
-            android:textSize="26sp" />
+        <!-- 顶栏：侧栏 + 标题 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/brand_navy"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_xs"
+            android:paddingTop="@dimen/space_xs"
+            android:paddingEnd="@dimen/space_xl"
+            android:paddingBottom="@dimen/space_xs">
+
+            <TextView
+                android:id="@+id/btnSidebar"
+                android:layout_width="@dimen/touch_target"
+                android:layout_height="@dimen/touch_target"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:contentDescription="@string/fm_sidebar"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="☰"
+                android:textColor="@color/on_dark"
+                android:textSize="20sp" />
+
+            <TextView
+                style="@style/Tv.HeroTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_xxs"
+                android:text="@string/fm_title" />
+        </LinearLayout>
+
+        <!-- 双窗口 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/brand_navy"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_xxs"
+            android:paddingEnd="@dimen/space_xxs"
+            android:paddingBottom="@dimen/space_xxs">
+
+            <include
+                android:id="@+id/paneA"
+                layout="@layout/view_file_pane"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/space_xxs"
+                android:layout_marginEnd="@dimen/space_xxs"
+                android:background="@color/hairline_strong" />
+
+            <include
+                android:id="@+id/paneB"
+                layout="@layout/view_file_pane"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <!-- 底部工具栏：常态条 / 多选条 -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/brand_navy_deep">
+
+            <HorizontalScrollView
+                android:id="@+id/fileBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/space_xs"
+                android:paddingTop="@dimen/space_xs"
+                android:paddingEnd="@dimen/space_xs"
+                android:paddingBottom="@dimen/space_xs"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btnBack"
+                        style="@style/Chip.Dark"
+                        android:paddingStart="@dimen/space_sm"
+                        android:paddingEnd="@dimen/space_sm"
+                        android:text="@string/fm_back" />
+
+                    <TextView
+                        android:id="@+id/btnForward"
+                        style="@style/Chip.Dark"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:paddingStart="@dimen/space_sm"
+                        android:paddingEnd="@dimen/space_sm"
+                        android:text="@string/fm_forward" />
+
+                    <TextView
+                        android:id="@+id/btnUp"
+                        style="@style/Chip.Dark"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:paddingStart="@dimen/space_sm"
+                        android:paddingEnd="@dimen/space_sm"
+                        android:text="@string/fm_up" />
+
+                    <TextView
+                        android:id="@+id/btnSync"
+                        style="@style/Chip.Dark"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:paddingStart="@dimen/space_sm"
+                        android:paddingEnd="@dimen/space_sm"
+                        android:text="@string/fm_sync" />
+
+                    <TextView
+                        android:id="@+id/btnNewFolder"
+                        style="@style/Chip.Dark"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:paddingStart="@dimen/space_sm"
+                        android:paddingEnd="@dimen/space_sm"
+                        android:text="@string/fm_new_folder" />
+
+                    <TextView
+                        android:id="@+id/btnSort"
+                        style="@style/Chip.Dark"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:paddingStart="@dimen/space_sm"
+                        android:paddingEnd="@dimen/space_sm"
+                        android:text="@string/fm_sort" />
+
+                    <TextView
+                        android:id="@+id/btnFilter"
+                        style="@style/Chip.Dark"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:paddingStart="@dimen/space_sm"
+                        android:paddingEnd="@dimen/space_sm"
+                        android:text="@string/fm_filter" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:id="@+id/selectBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/space_sm"
+                android:paddingTop="@dimen/space_xs"
+                android:paddingEnd="@dimen/space_sm"
+                android:paddingBottom="@dimen/space_xs"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvSelCount"
+                        style="@style/Tv.BodySm"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/fm_n_selected_0"
+                        android:textColor="@color/on_dark" />
+
+                    <TextView
+                        android:id="@+id/btnSelCancel"
+                        style="@style/Chip.Dark"
+                        android:paddingStart="@dimen/space_sm"
+                        android:paddingEnd="@dimen/space_sm"
+                        android:text="@string/fm_cancel" />
+                </LinearLayout>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btnSelAll"
+                            style="@style/Chip.Dark"
+                            android:paddingStart="@dimen/space_sm"
+                            android:paddingEnd="@dimen/space_sm"
+                            android:text="@string/fm_select_all" />
+
+                        <TextView
+                            android:id="@+id/btnSelInvert"
+                            style="@style/Chip.Dark"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:paddingStart="@dimen/space_sm"
+                            android:paddingEnd="@dimen/space_sm"
+                            android:text="@string/fm_invert" />
+
+                        <TextView
+                            android:id="@+id/btnSelClass"
+                            style="@style/Chip.Dark"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:paddingStart="@dimen/space_sm"
+                            android:paddingEnd="@dimen/space_sm"
+                            android:text="@string/fm_class_select" />
+
+                        <TextView
+                            android:id="@+id/btnSelRange"
+                            style="@style/Chip.Dark"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:paddingStart="@dimen/space_sm"
+                            android:paddingEnd="@dimen/space_sm"
+                            android:text="@string/fm_range_select" />
+
+                        <TextView
+                            android:id="@+id/btnSelCopy"
+                            style="@style/Chip.Dark"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:paddingStart="@dimen/space_sm"
+                            android:paddingEnd="@dimen/space_sm"
+                            android:text="@string/fm_copy_to" />
+
+                        <TextView
+                            android:id="@+id/btnSelMove"
+                            style="@style/Chip.Dark"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:paddingStart="@dimen/space_sm"
+                            android:paddingEnd="@dimen/space_sm"
+                            android:text="@string/fm_move_to" />
+
+                        <TextView
+                            android:id="@+id/btnSelDelete"
+                            style="@style/Chip.Dark"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:paddingStart="@dimen/space_sm"
+                            android:paddingEnd="@dimen/space_sm"
+                            android:text="@string/fm_delete" />
+
+                        <TextView
+                            android:id="@+id/btnSelShare"
+                            style="@style/Chip.Dark"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:paddingStart="@dimen/space_sm"
+                            android:paddingEnd="@dimen/space_sm"
+                            android:text="@string/fm_share" />
+
+                        <TextView
+                            android:id="@+id/btnSelRename"
+                            style="@style/Chip.Dark"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:paddingStart="@dimen/space_sm"
+                            android:paddingEnd="@dimen/space_sm"
+                            android:text="@string/fm_rename" />
+
+                        <TextView
+                            android:id="@+id/btnSelProps"
+                            style="@style/Chip.Dark"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:paddingStart="@dimen/space_sm"
+                            android:paddingEnd="@dimen/space_sm"
+                            android:text="@string/fm_properties" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- 侧拉栏：遮罩 + 抽屉 -->
+    <View
+        android:id="@+id/drawerScrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/drawer"
+        android:layout_width="@dimen/drawer_width"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/brand_navy_deep"
+        android:orientation="vertical"
+        android:translationX="-288dp"
+        android:visibility="invisible">
 
         <TextView
             style="@style/Tv.HeroTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_xxs"
+            android:layout_marginStart="@dimen/space_lg"
+            android:layout_marginTop="@dimen/space_lg"
+            android:layout_marginBottom="@dimen/space_sm"
             android:text="@string/fm_title" />
-    </LinearLayout>
-
-    <!-- 路径行：上级 + 当前路径 + 刷新 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/surface"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/space_lg"
-        android:paddingTop="@dimen/space_xs"
-        android:paddingEnd="@dimen/space_lg"
-        android:paddingBottom="@dimen/space_xs">
 
         <TextView
-            android:id="@+id/btnUp"
-            style="@style/Chip.Action"
-            android:contentDescription="@string/fm_up"
-            android:paddingStart="@dimen/space_sm"
-            android:paddingEnd="@dimen/space_sm"
-            android:text="@string/fm_up" />
-
-        <TextView
-            android:id="@+id/tvPath"
-            style="@style/Tv.Caption"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_sm"
-            android:layout_weight="1"
-            android:ellipsize="middle"
-            android:maxLines="1"
-            android:text="@string/fm_root" />
-
-        <TextView
-            android:id="@+id/btnRefresh"
-            style="@style/Chip.Action"
-            android:contentDescription="@string/fm_refresh"
-            android:paddingStart="@dimen/space_sm"
-            android:paddingEnd="@dimen/space_sm"
-            android:text="@string/fm_refresh" />
-    </LinearLayout>
-
-    <!-- 工具行：新建 / 排序 / 粘贴 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/surface"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/space_lg"
-        android:paddingEnd="@dimen/space_lg"
-        android:paddingBottom="@dimen/space_sm">
-
-        <TextView
-            android:id="@+id/btnNewFolder"
-            style="@style/Chip.Action"
-            android:paddingStart="@dimen/space_sm"
-            android:paddingEnd="@dimen/space_sm"
-            android:text="@string/fm_new_folder" />
-
-        <TextView
-            android:id="@+id/btnSort"
-            style="@style/Chip.Action"
-            android:layout_marginStart="@dimen/space_xs"
-            android:paddingStart="@dimen/space_sm"
-            android:paddingEnd="@dimen/space_sm"
-            android:text="@string/fm_sort" />
-
-        <TextView
-            android:id="@+id/btnPaste"
-            style="@style/Chip.Action"
-            android:layout_marginStart="@dimen/space_xs"
-            android:paddingStart="@dimen/space_sm"
-            android:paddingEnd="@dimen/space_sm"
-            android:text="@string/fm_paste"
-            android:visibility="gone" />
-    </LinearLayout>
-
-    <!-- 列表区 -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="@color/canvas">
-
-        <ListView
-            android:id="@+id/list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:divider="@color/hairline_soft"
-            android:dividerHeight="1dp"
-            android:scrollbars="vertical" />
-
-        <TextView
-            android:id="@+id/tvEmpty"
-            style="@style/Tv.BodySm"
+            style="@style/Tv.Label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="@string/fm_empty" />
-    </FrameLayout>
-</LinearLayout>
+            android:layout_marginStart="@dimen/space_lg"
+            android:layout_marginTop="@dimen/space_xs"
+            android:layout_marginBottom="@dimen/space_xxs"
+            android:text="@string/fm_storage" />
+
+        <LinearLayout
+            android:id="@+id/storageList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="@dimen/space_lg"
+            android:layout_marginTop="@dimen/space_sm"
+            android:layout_marginEnd="@dimen/space_lg"
+            android:layout_marginBottom="@dimen/space_sm"
+            android:background="@color/brand_navy_mid" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_lg"
+            android:paddingEnd="@dimen/space_sm">
+
+            <TextView
+                style="@style/Tv.Label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/fm_bookmarks" />
+
+            <TextView
+                android:id="@+id/btnAddBookmark"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:contentDescription="@string/fm_add_bookmark"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="＋"
+                android:textColor="@color/brand_purple_300"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/bookmarkList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="@dimen/space_lg" />
+        </ScrollView>
+    </LinearLayout>
+</FrameLayout>

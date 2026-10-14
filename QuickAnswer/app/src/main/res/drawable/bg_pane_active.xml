@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 活动文件窗口：canvas 白底 + primary 2dp 描边，标记当前操作窗口。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/canvas" />
+    <stroke
+        android:width="2dp"
+        android:color="@color/primary" />
+</shape>

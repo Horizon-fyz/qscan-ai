@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 单个文件窗口（被 activity_file_manager 以 include 复用两次）：路径行 + 过滤条 + 列表。
+     基准 notion/DESIGN.md，窄栏（约半屏）走紧凑节奏。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_pane"
+    android:orientation="vertical"
+    android:padding="2dp">
+
+    <!-- 路径行：点/长按可跳转路径；右侧 ☆ 为当前目录加书签 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface_soft"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_xs"
+        android:paddingTop="@dimen/space_xxs"
+        android:paddingEnd="@dimen/space_xxs"
+        android:paddingBottom="@dimen/space_xxs">
+
+        <TextView
+            android:id="@+id/tvPath"
+            style="@style/Tv.Caption"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:ellipsize="middle"
+            android:focusable="true"
+            android:maxLines="1"
+            android:paddingStart="@dimen/space_xxs"
+            android:paddingEnd="@dimen/space_xxs"
+            android:text="@string/fm_root_dir"
+            android:textColor="@color/charcoal" />
+
+        <TextView
+            android:id="@+id/btnStar"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:contentDescription="@string/fm_add_bookmark"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="☆"
+            android:textColor="@color/primary"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- 过滤条：仅在有过滤关键字时显示 -->
+    <LinearLayout
+        android:id="@+id/filterBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/tint_yellow"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_xs"
+        android:paddingEnd="@dimen/space_xxs"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvFilter"
+            style="@style/Tv.Caption"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/charcoal" />
+
+        <TextView
+            android:id="@+id/btnFilterClear"
+            style="@style/Chip.Action"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="@string/fm_filter_clear"
+            android:minWidth="0dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:text="✕"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- 列表区 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/canvas">
+
+        <ListView
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@color/hairline_soft"
+            android:dividerHeight="1dp"
+            android:scrollbars="vertical" />
+
+        <TextView
+            android:id="@+id/tvEmpty"
+            style="@style/Tv.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="@dimen/space_sm"
+            android:text="@string/fm_empty" />
+    </FrameLayout>
+</LinearLayout>

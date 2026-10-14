@@ -146,4 +146,9 @@
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
     </style>
+
+    <!-- 深色底栏上的 chip：白字，底仍用 ghost 透明 + surface 按下态 -->
+    <style name="Chip.Dark" parent="Chip.Action">
+        <item name="android:textColor">@color/on_dark</item>
+    </style>
 </resources>
