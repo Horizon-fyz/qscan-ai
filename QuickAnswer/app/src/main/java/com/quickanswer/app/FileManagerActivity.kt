@@ -22,6 +22,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import com.quickanswer.app.databinding.ActivityFileManagerBinding
 import com.quickanswer.app.databinding.ItemDrawerEntryBinding
@@ -398,6 +399,54 @@ class FileManagerActivity : AppCompatActivity() {
         showProperties(file)
     }
 
+    /** 长按文件弹出「电脑右键」式候选菜单，仅作用于被长按的那一项，不影响当前多选。 */
+    private fun showContextMenu(anchor: View, file: File, pane: Pane) {
+        val popup = PopupMenu(this, anchor)
+        popup.menu.add(0, MENU_OPEN, 0, R.string.fm_open)
+        popup.menu.add(0, MENU_MULTI, 1, R.string.fm_multi_select)
+        popup.menu.add(0, MENU_COPY, 2, R.string.fm_copy_to)
+        popup.menu.add(0, MENU_MOVE, 3, R.string.fm_move_to)
+        popup.menu.add(0, MENU_RENAME, 4, R.string.fm_rename)
+        popup.menu.add(0, MENU_SHARE, 5, R.string.fm_share)
+        popup.menu.add(0, MENU_DELETE, 6, R.string.fm_delete)
+        popup.menu.add(0, MENU_PROPS, 7, R.string.fm_properties)
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                MENU_OPEN -> openFile(pane, file)
+                MENU_MULTI -> {
+                    pane.selection.add(file)
+                    pane.updateSelectionUi()
+                }
+                MENU_COPY -> actOn(pane, file) { transfer(cut = false) }
+                MENU_MOVE -> actOn(pane, file) { transfer(cut = true) }
+                MENU_RENAME -> actOn(pane, file) { renameSelected() }
+                MENU_SHARE -> actOn(pane, file) { shareSelected() }
+                MENU_DELETE -> actOn(pane, file) { confirmDelete() }
+                MENU_PROPS -> actOn(pane, file) { propsSelected() }
+            }
+            true
+        }
+        popup.show()
+    }
+
+    private fun openFile(pane: Pane, file: File) {
+        if (file.isDirectory) {
+            pane.navigateTo(file)
+            updateBars()
+        } else if (!FileUtils.openFile(this, file)) {
+            toast(getString(R.string.fm_open_failed))
+        }
+    }
+
+    /** 把窗口的选中项临时设为该文件后执行菜单动作（各动作内部会自行清理选中态）。 */
+    private fun actOn(pane: Pane, file: File, block: () -> Unit) {
+        pane.selection.clear()
+        pane.selection.add(file)
+        setActive(pane)
+        pane.updateSelectionUi()
+        block()
+    }
+
     private fun shareFiles(files: List<File>) {
         if (files.isEmpty()) return
         if (files.size == 1) {
@@ -655,9 +704,9 @@ class FileManagerActivity : AppCompatActivity() {
                     }
                 }
             }
-            vb.list.setOnItemLongClickListener { _, _, position, _ ->
+            vb.list.setOnItemLongClickListener { _, rowView, position, _ ->
                 setActive(this)
-                toggleAt(position, select = true)
+                showContextMenu(rowView, adapter.fileAt(position), this)
                 true
             }
             vb.list.setOnTouchListener(makeSwipeSelectListener())
@@ -805,5 +854,13 @@ class FileManagerActivity : AppCompatActivity() {
 
     companion object {
         private const val KEY_BOOKMARKS = "bookmarks"
+        private const val MENU_OPEN = 1
+        private const val MENU_MULTI = 2
+        private const val MENU_COPY = 3
+        private const val MENU_MOVE = 4
+        private const val MENU_RENAME = 5
+        private const val MENU_SHARE = 6
+        private const val MENU_DELETE = 7
+        private const val MENU_PROPS = 8
     }
 }

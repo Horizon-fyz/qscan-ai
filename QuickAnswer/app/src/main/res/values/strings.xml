@@ -136,6 +136,7 @@
     <string name="fm_delete">删除</string>
     <string name="fm_copy">复制</string>
     <string name="fm_properties">属性</string>
+    <string name="fm_multi_select">多选</string>
     <string name="fm_select_all">全选</string>
     <string name="fm_n_selected">已选择 %1$d 项</string>
     <string name="fm_n_selected_0">已选择 0 项</string>
