@@ -10,12 +10,14 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Point
+import android.graphics.Rect
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Build
@@ -79,8 +81,19 @@ class FloatingService : Service() {
     /** 防止截屏/识别阶段重复触发 */
     private var busy = false
 
+    /** 翻动拼接是否进行中（解题模式）：连续截屏 → 去重叠 → 累积切片 */
+    private var stitching = false
+    private val stitchSlices = mutableListOf<String>()
+    private var stitcher: ScrollStitcher? = null
+    private val stitchTick = Runnable { grabForStitch() }
+
     /** 答案原文累积缓冲：流式增量先累积，再整体交给 WebView 渲染，保证公式跨 chunk 也能正确解析 */
     private val answerBuffer = StringBuilder()
+
+    /** 模式变化监听：主界面切换模式时，本服务同步刷新悬浮球文案与面板形态。 */
+    private val modeListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == Prefs.KEY_MODE) applyMode()
+    }
 
     /** WebView 中 answer.html 是否已加载完成（未完成时的渲染请求先缓存） */
     private var webReady = false
@@ -96,6 +109,7 @@ class FloatingService : Service() {
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        Prefs.registerModeListener(this, modeListener)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -273,8 +287,12 @@ class FloatingService : Service() {
         applyMode()
     }
 
-    /** 点击悬浮球：解题模式直接截屏解答；日常模式先打开面板让用户输入需求。 */
+    /** 点击悬浮球：拼接中→结束拼接；解题模式直接截屏解答；日常模式先打开面板让用户输入需求。 */
     private fun onBallTap() {
+        if (stitching) {
+            stopStitch()
+            return
+        }
         if (Prefs.mode(this) == Prefs.MODE_DAILY) {
             showPanel()
             panel?.tvStatus?.text = getString(R.string.panel_status_idle_daily)
@@ -391,6 +409,8 @@ class FloatingService : Service() {
         binding.btnReread.setOnClickListener {
             if (Prefs.mode(this) == Prefs.MODE_DAILY) sendDaily() else doCapture()
         }
+        binding.btnStitch.setOnClickListener { startStitch() }
+        binding.btnDailyShot.setOnClickListener { sendDailyShot() }
         binding.btnCopy.setOnClickListener {
             val text = answerBuffer.toString()
             if (text.isNotEmpty()) {
@@ -557,6 +577,7 @@ class FloatingService : Service() {
         val p = panel ?: return
         p.zoneQuestion.visibility = if (daily) View.GONE else View.VISIBLE
         p.dailyInputBar.visibility = if (daily) View.VISIBLE else View.GONE
+        p.btnStitch.visibility = if (daily) View.GONE else View.VISIBLE
         if (!daily) {
             p.etRequest.setText("")
             p.etRequest.clearFocus()
@@ -613,6 +634,15 @@ class FloatingService : Service() {
         hideKeyboard()
         panel?.etRequest?.setText("")
         doCapture(request)
+    }
+
+    /** 日常模式直接截屏：不带需求，按当前屏幕让千问给指引。 */
+    private fun sendDailyShot() {
+        if (busy) return
+        stopVoice()
+        hideKeyboard()
+        panel?.etRequest?.setText("")
+        doCapture("")
     }
 
     private fun toggleVoice() {
@@ -734,7 +764,7 @@ class FloatingService : Service() {
                 val base64 = bitmapToJpegBase64(bitmap)
                 bitmap.recycle()
                 handler.post {
-                    if (daily) startDaily(base64, request.orEmpty()) else startPipeline(base64)
+                    if (daily) startDaily(base64, request.orEmpty()) else startPipeline(listOf(base64))
                 }
             }.start()
         }, CAPTURE_DELAY_MS)
@@ -763,7 +793,7 @@ class FloatingService : Service() {
     // ---------------------------------------------------------------- 解题模式流水线
 
     /** 启动解题流水线：先校验两把 Key，再进入「千问读题 → DeepSeek 答题」。 */
-    private fun startPipeline(imageBase64: String) {
+    private fun startPipeline(images: List<String>) {
         val qwenKey = Prefs.apiKey(this, Prefs.PROVIDER_QWEN)
         val dsKey = Prefs.apiKey(this, Prefs.PROVIDER_DEEPSEEK)
         if (qwenKey.isBlank() || dsKey.isBlank()) {
@@ -774,19 +804,19 @@ class FloatingService : Service() {
         panel?.tvStatus?.text = getString(R.string.panel_status_reading)
         panel?.tvQuestion?.text = getString(R.string.panel_question_reading)
         busy = false
-        readQuestion(imageBase64)
+        readQuestion(images)
     }
 
-    /** 第一段：千问视觉读题，把截图转成题目文字（含 LaTeX）。 */
-    private fun readQuestion(imageBase64: String) {
+    /** 第一段：千问视觉读题，把（可能多张的）截图转成题目文字（含 LaTeX）。 */
+    private fun readQuestion(images: List<String>) {
         val key = Prefs.apiKey(this, Prefs.PROVIDER_QWEN)
         val c = ChatClient(key, Prefs.MODEL_QWEN_VISION, ChatClient.QWEN_URL)
         client = c
 
         val sb = StringBuilder()
         Thread {
-            c.streamImage(
-                imageBase64 = imageBase64,
+            c.streamImages(
+                imageBase64List = images,
                 onDelta = { delta ->
                     sb.append(delta)
                     handler.post { panel?.tvQuestion?.text = sb.toString() }
@@ -865,6 +895,114 @@ class FloatingService : Service() {
         }.start()
     }
 
+    // ---------------------------------------------------------------- 翻动拼接识别（解题模式）
+
+    /**
+     * 开始翻动拼接：进入连续截屏采集，逐帧去重叠累积新增片段。
+     * 采集期间面板收起、悬浮球文案变为「停」，点悬浮球即结束并进入读题 → 答题。
+     */
+    private fun startStitch() {
+        if (busy || stitching) return
+        if (capture == null) {
+            panel?.tvStatus?.text = getString(R.string.panel_status_capture_fail)
+            return
+        }
+        cancelStream()
+        stopVoice()
+        answerBuffer.setLength(0)
+        renderAnswer("")
+        stitchSlices.clear()
+        stitcher = ScrollStitcher()
+        stitching = true
+
+        panel?.root?.visibility = View.GONE
+        ball?.ball?.text = getString(R.string.ball_text_stop)
+        toast(getString(R.string.stitch_hint))
+        handler.postDelayed(stitchTick, STITCH_INTERVAL_MS)
+    }
+
+    /** 结束拼接：复原悬浮层，把累积的切片整体交给读题 → 答题流水线。 */
+    private fun stopStitch() {
+        if (!stitching) return
+        stitching = false
+        handler.removeCallbacks(stitchTick)
+        stitcher = null
+        applyMode() // 复原悬浮球文案与面板形态
+
+        val slices = stitchSlices.toList()
+        stitchSlices.clear()
+        showPanel()
+        if (slices.isEmpty()) {
+            panel?.tvStatus?.text = getString(R.string.stitch_empty)
+            return
+        }
+        startPipeline(slices)
+    }
+
+    /**
+     * 采集一帧：后台线程截屏 → 去重叠得到新增切片 → 编码为 JPEG 累积；随后安排下一帧。
+     * 悬浮球在采集期间保持可见（作为「停止」按钮），其所在区域在切片中被涂白遮挡。
+     */
+    private fun grabForStitch() {
+        if (!stitching) return
+        val cap = capture
+        if (cap == null) {
+            stopStitch()
+            return
+        }
+        val mask = ballMaskRect()
+        Thread {
+            val frame = cap.capture()
+            var slice: Bitmap? = null
+            if (frame != null) {
+                slice = runCatching { stitcher?.feed(frame, mask) }.getOrNull()
+                frame.recycle()
+            }
+            val jpeg = slice?.let {
+                val s = bitmapToJpegBase64(it)
+                it.recycle()
+                s
+            }
+            handler.post {
+                if (!stitching) return@post
+                if (jpeg != null) {
+                    stitchSlices.add(jpeg)
+                    if (stitchSlices.size >= MAX_STITCH_SLICES) {
+                        toast(getString(R.string.stitch_full))
+                        stopStitch()
+                        return@post
+                    }
+                }
+                handler.postDelayed(stitchTick, STITCH_INTERVAL_MS)
+            }
+        }.start()
+    }
+
+    /** 悬浮球在屏幕截图中的外接矩形（含少量外扩），用于在切片中遮挡掉悬浮球本身。 */
+    private fun ballMaskRect(): Rect? {
+        if (!::ballParams.isInitialized) return null
+        if (ball?.root?.visibility != View.VISIBLE) return null
+        // 悬浮层窗口从状态栏下沿起算，截图则是整屏，故需补上状态栏高度
+        val inset = topInsetPx()
+        val pad = dp(4)
+        return Rect(
+            ballParams.x - pad,
+            ballParams.y - pad + inset,
+            ballParams.x + ballParams.width + pad,
+            ballParams.y + ballParams.height + pad + inset
+        )
+    }
+
+    private fun topInsetPx(): Int =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            runCatching {
+                windowManager.currentWindowMetrics.windowInsets
+                    .getInsets(android.view.WindowInsets.Type.systemBars()).top
+            }.getOrDefault(0)
+        } else {
+            0
+        }
+
     private fun handleDelta(delta: String) {
         handler.post {
             answerBuffer.append(delta)
@@ -890,6 +1028,10 @@ class FloatingService : Service() {
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        Prefs.unregisterModeListener(this, modeListener)
+        stitching = false
+        stitcher = null
+        stitchSlices.clear()
         cancelStream()
         destroyVoice()
         capture?.release()
@@ -931,6 +1073,12 @@ class FloatingService : Service() {
 
         /** 流式渲染节流间隔（毫秒） */
         private const val RENDER_THROTTLE_MS = 120L
+
+        /** 翻动拼接：相邻两帧的采集间隔（毫秒），给用户留出滚动时间 */
+        private const val STITCH_INTERVAL_MS = 600L
+
+        /** 翻动拼接：最多累积的片段数，防止内存与请求体过大 */
+        private const val MAX_STITCH_SLICES = 12
 
         /** 视觉直传时截图长边上限（像素），控制上传体积与响应速度 */
         private const val VISION_MAX_SIDE = 1600

@@ -142,6 +142,22 @@
                 android:text="@string/btn_voice"
                 android:textColor="@color/ink"
                 android:textSize="14sp" />
+
+            <!-- 日常模式：免输入，直接按当前屏幕截屏交千问给指引 -->
+            <TextView
+                android:id="@+id/btnDailyShot"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="@dimen/space_xs"
+                android:background="@drawable/bg_button_secondary"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:minWidth="56dp"
+                android:paddingStart="@dimen/space_sm"
+                android:paddingEnd="@dimen/space_sm"
+                android:text="@string/btn_daily_shot"
+                android:textColor="@color/ink"
+                android:textSize="14sp" />
         </LinearLayout>
 
         <!-- 上半区：题目识别（日常模式下隐藏） -->
@@ -231,6 +247,17 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/btn_copy" />
+
+            <!-- 解题模式：翻动拼接识别（仅解题模式可见） -->
+            <Button
+                android:id="@+id/btnStitch"
+                style="@style/Btn.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_xs"
+                android:layout_weight="1"
+                android:text="@string/btn_stitch"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/btnReread"

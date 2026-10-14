@@ -1,6 +1,7 @@
 package com.quickanswer.app
 
 import android.content.Context
+import android.content.SharedPreferences
 
 /**
  * 本地配置：API Key、答题模型与工作模式，仅保存在本机 SharedPreferences。
@@ -15,7 +16,9 @@ object Prefs {
     private const val KEY_API_DEEPSEEK = "api_key_deepseek"
     private const val KEY_API_QWEN = "api_key_qwen"
     private const val KEY_MODEL = "model"
-    private const val KEY_MODE = "mode"
+
+    /** 工作模式键：悬浮窗服务据此监听模式切换。 */
+    const val KEY_MODE = "mode"
 
     // ---------------------------------------------------------------- 提供商
 
@@ -69,6 +72,20 @@ object Prefs {
     fun setMode(context: Context, value: String) {
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
             .edit().putString(KEY_MODE, value).apply()
+    }
+
+    /**
+     * 注册/注销模式变化监听：悬浮窗服务与主界面同进程，
+     * 主界面切换模式后，服务据此实时刷新悬浮球文案与面板形态。
+     */
+    fun registerModeListener(context: Context, listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .registerOnSharedPreferenceChangeListener(listener)
+    }
+
+    fun unregisterModeListener(context: Context, listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            .unregisterOnSharedPreferenceChangeListener(listener)
     }
 
     /** 读题固定使用的百炼（DashScope）视觉模型；如 qwen3.7-plus / qwen3-vl-plus 等。 */

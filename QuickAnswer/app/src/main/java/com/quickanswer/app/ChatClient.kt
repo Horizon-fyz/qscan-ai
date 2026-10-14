@@ -12,6 +12,7 @@ import java.net.URL
  *
  * 两段式流水线：
  *  - [streamImage] 视觉读题（千问 / Qwen-VL：截图转 base64，只抽取题目文字，含 LaTeX）；
+ *  - [streamImages] 多图视觉读题（翻动拼接后的连续片段，一次合并转写）；
  *  - [stream]      文本答题（DeepSeek：把读题结果交给推理模型解答）；
  *  - [streamImageAsk] 日常模式（千问 / Qwen-VL：截图 + 用户需求，直接给出操作指引或事实）。
  *
@@ -54,18 +55,30 @@ class ChatClient(
         onDelta: (String) -> Unit,
         onDone: () -> Unit,
         onError: (String) -> Unit
+    ) = streamImages(listOf(imageBase64), onDelta, onDone, onError)
+
+    /**
+     * 视觉读题（多图）：一次传入多张同源截图，交给多模态模型合并转写。
+     * 用于解题模式的「翻动拼接识别」——多张图是同一长页面自上而下滚动截取的连续片段。
+     */
+    fun streamImages(
+        imageBase64List: List<String>,
+        onDelta: (String) -> Unit,
+        onDone: () -> Unit,
+        onError: (String) -> Unit
     ) {
-        val imagePart = JSONObject()
-            .put("type", "image_url")
-            .put("image_url", JSONObject().put("url", "data:image/jpeg;base64,$imageBase64"))
-        val textPart = JSONObject()
-            .put("type", "text")
-            .put("text", READ_PROMPT)
+        val content = JSONArray()
+        for (imageBase64 in imageBase64List) {
+            content.put(
+                JSONObject()
+                    .put("type", "image_url")
+                    .put("image_url", JSONObject().put("url", "data:image/jpeg;base64,$imageBase64"))
+            )
+        }
+        content.put(JSONObject().put("type", "text").put("text", READ_PROMPT))
 
         val messages = JSONArray().put(
-            JSONObject()
-                .put("role", "user")
-                .put("content", JSONArray().put(imagePart).put(textPart))
+            JSONObject().put("role", "user").put("content", content)
         )
         // 读题属纯转写任务，无需思考链；关闭思考可显著降本提速。
         post(messages, onDelta, onDone, onError, disableThinking = true)
@@ -196,7 +209,10 @@ class ChatClient(
                 "3) 所有数学公式与符号（分式、根式、上下标、积分、求和、矩阵、方程组等）" +
                 "一律使用标准 LaTeX 表示：行内用 \$...\$，独立成行的公式用 \$\$...\$\$；\n" +
                 "4) 若截图中有多道题，按先后顺序全部转写，用空行分隔；\n" +
-                "5) 只输出题目文字，不要任何前言、后缀或解释性语句。"
+                "5) 若一次给了多张图片，它们是同一长页面自上而下依次滚动截取的连续片段" +
+                "（已去除重叠），请视为一整段连续内容，按图片先后顺序自然衔接、合并转写，" +
+                "并避免在衔接处重复同一句话或同一个公式；\n" +
+                "6) 只输出题目文字，不要任何前言、后缀或解释性语句。"
 
         /**
          * 日常模式提示词：结合屏幕截图与用户需求，给出可直接照做的操作指引或事实结论。
