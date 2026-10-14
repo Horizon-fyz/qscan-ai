@@ -30,6 +30,12 @@ local.properties
 *.env
 .env.*
 
+# ---- 签名密钥与口令（长期资产，勿提交）----
+keystore.properties
+keystore/
+*.jks
+*.keystore
+
 # ---- IDE / 编辑器 ----
 .idea/
 *.iml
